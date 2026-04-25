@@ -77,7 +77,7 @@ export const TheReadApp: React.FC = () => {
           {route === 'dashboard' && <DashboardMobile user={user} nav={go} />}
           {route === 'feed' && <FeedMobile nav={go} />}
           {route === 'write' && <WriteMobile user={user} nav={go} />}
-          {route === 'post' && currentPost && <PostMobile post={currentPost} user={user} nav={go} />}
+          {route === 'post' && currentPost && <PostMobile post={currentPost} nav={go} />}
           {route === 'notifications' && <NotificationsMobile />}
           {route === 'profile' && <ProfileMobile user={user} nav={go} />}
         </div>

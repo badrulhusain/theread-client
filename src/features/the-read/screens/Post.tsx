@@ -34,9 +34,9 @@ const PostActions: React.FC<{ post: Post; vertical?: boolean }> = ({ post, verti
 
   const items = [
     { icon: 'heart', count: post.reactions + (liked ? 1 : 0), active: liked, onClick: () => setLiked(l => !l), color: 'var(--burgundy)' },
-    { icon: 'comment', count: post.comments, active: false, onClick: () => {} },
+    { icon: 'comment', count: post.comments, active: false, onClick: () => { } },
     { icon: 'bookmark', count: undefined, active: saved, onClick: () => setSaved(s => !s), color: 'var(--tan-2)' },
-    { icon: 'share', count: undefined, active: false, onClick: () => {} },
+    { icon: 'share', count: undefined, active: false, onClick: () => { } },
   ];
 
   return (
@@ -178,7 +178,7 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
 );
 
 // ── Post Mobile ───────────────────────────────────────────────────────────────
-export const PostMobile: React.FC<{ post: Post; user: Author; nav: (r: any) => void }> = ({ post, user, nav }) => (
+export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void }> = ({ post, nav }) => (
   <div style={{ padding: '14px 18px 90px' }}>
     <button onClick={() => nav('feed')} className="neu-flat" style={{
       border: 'none', padding: '6px 12px', borderRadius: 999,

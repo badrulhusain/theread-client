@@ -1,5 +1,5 @@
 import React from 'react';
-import { Avatar, NeuButton, NeuCard, Ornament, Pill, SectionHeading } from '../components/ui';
+import { Avatar, NeuButton, NeuCard, Pill, SectionHeading } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { POSTS, ANNOUNCEMENTS, SCHEDULE_TODAY, TRENDING, tagById } from '../data';
 import type { Author, Post } from '../types';
