@@ -1,0 +1,7 @@
+﻿
+> client@0.0.0 build
+> tsc -b && vite build
+
+src/features/admin/AuctionDashboardPage.tsx(3,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
+src/features/admin/components/AllCandidates.tsx(2,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.
+src/features/auction/CreateBidsphere.tsx(4,19): error TS2307: Cannot find module 'axios' or its corresponding type declarations.

@@ -1,0 +1,38 @@
+[
+  {
+    "id": "0dd4a51c-d849-4380-b976-0ced26fe000d",
+    "created_by": "717b657b-529a-4d62-a675-2ab58c4f779e",
+    "name": "artoolam",
+    "auction_type": "DRAFT",
+    "status": "PENDING",
+    "started_at": null,
+    "ended_at": null,
+    "created_at": "2026-03-02T04:22:31.384Z",
+    "updated_at": "2026-03-02T04:22:31.384Z",
+    "deleted_at": null
+  },
+  {
+    "id": "a522c054-5a0c-4e51-a6b0-3c20aa590788",
+    "created_by": "00a9ba85-8fee-4e4e-8999-85c8ca894825",
+    "name": "ooh",
+    "auction_type": "DRAFT",
+    "status": "PENDING",
+    "started_at": null,
+    "ended_at": null,
+    "created_at": "2026-03-02T04:38:41.582Z",
+    "updated_at": "2026-03-02T04:38:41.582Z",
+    "deleted_at": null
+  },
+  {
+    "id": "ad01f2d4-e2c5-4b7f-b54c-10fd53f39e5c",
+    "created_by": "00a9ba85-8fee-4e4e-8999-85c8ca894825",
+    "name": "undaayo",
+    "auction_type": "DRAFT",
+    "status": "PENDING",
+    "started_at": null,
+    "ended_at": null,
+    "created_at": "2026-03-02T04:39:09.358Z",
+    "updated_at": "2026-03-02T04:39:09.358Z",
+    "deleted_at": null
+  }
+]

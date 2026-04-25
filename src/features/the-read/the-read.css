@@ -1,0 +1,199 @@
+/* The Read — Acadamorphic design system */
+
+:root {
+  --paper: #f5f1ea;
+  --paper-2: #efe9df;
+  --paper-3: #e8dfd0;
+  --ink: #2a1f17;
+  --ink-2: #5b4a3d;
+  --ink-3: #8a7a6a;
+  --line: #d9cdb8;
+  --burgundy: #7a2e2e;
+  --burgundy-2: #9a3b3b;
+  --tan: #c9a878;
+  --tan-2: #b08a55;
+  --moss: #5a6b3a;
+  --forest: #3d4a26;
+  --cream-hi: #fbf8f2;
+  --sh-lo: rgba(255, 253, 248, 0.9);
+  --sh-hi: rgba(120, 92, 55, 0.28);
+  --radius: 20px;
+  --density: 1;
+  --accent: var(--burgundy);
+  --accent-soft: rgba(122, 46, 46, 0.12);
+}
+
+.tr-root {
+  font-family: 'Inter', system-ui, sans-serif;
+  color: var(--ink);
+  background: var(--paper);
+  min-height: 100vh;
+}
+
+.tr-root * {
+  box-sizing: border-box;
+}
+
+/* Neumorphic base classes */
+.neu {
+  background: var(--paper);
+  box-shadow: 8px 8px 20px var(--sh-hi), -8px -8px 20px var(--sh-lo);
+}
+
+.neu-sm {
+  background: var(--paper);
+  box-shadow: 4px 4px 10px var(--sh-hi), -4px -4px 10px var(--sh-lo);
+}
+
+.neu-inset {
+  background: var(--paper);
+  box-shadow: inset 4px 4px 8px var(--sh-hi), inset -4px -4px 8px var(--sh-lo);
+}
+
+.neu-flat {
+  background: var(--paper);
+  box-shadow: 2px 2px 5px var(--sh-hi), -2px -2px 5px var(--sh-lo);
+}
+
+.neu-press:active {
+  box-shadow: inset 4px 4px 8px var(--sh-hi), inset -4px -4px 8px var(--sh-lo) !important;
+}
+
+/* Typography */
+.tr-serif {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: "opsz" 80;
+}
+
+.tr-display {
+  font-family: 'Fraunces', Georgia, serif;
+  font-variation-settings: "opsz" 144;
+  letter-spacing: -0.02em;
+}
+
+.tr-mono {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* Transitions */
+.hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+}
+
+/* Frame scroll */
+.frame-scroll {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(122, 46, 46, 0.3) transparent;
+}
+
+.frame-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.frame-scroll::-webkit-scrollbar-thumb {
+  background: rgba(122, 46, 46, 0.3);
+  border-radius: 6px;
+}
+
+/* Paper background texture */
+.paper-bg {
+  background-color: var(--paper);
+  background-image:
+    radial-gradient(rgba(139, 109, 74, 0.08) 1px, transparent 1px),
+    radial-gradient(rgba(139, 109, 74, 0.06) 1px, transparent 1px);
+  background-size: 24px 24px, 13px 13px;
+  background-position: 0 0, 12px 12px;
+}
+
+/* Pill badge */
+.tr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Animations */
+@keyframes tr-fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tr-fade-up {
+  animation: tr-fadeUp 0.5s ease both;
+}
+
+/* Gold streak underline */
+.gold-streak {
+  position: relative;
+}
+
+.gold-streak::after {
+  content: "";
+  position: absolute;
+  left: 12px; right: 12px; bottom: 6px;
+  height: 2px;
+  background: linear-gradient(90deg, var(--tan-2), var(--tan), var(--tan-2));
+  border-radius: 2px;
+}
+
+/* Scrollbar for root */
+.tr-root ::-webkit-scrollbar { width: 8px; height: 8px; }
+.tr-root ::-webkit-scrollbar-track { background: transparent; }
+.tr-root ::-webkit-scrollbar-thumb { background: rgba(122,46,46,.3); border-radius: 8px; }
+
+/* Layout */
+.tr-layout {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.tr-main {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background: var(--paper);
+  height: 100vh;
+  overflow: hidden;
+}
+
+.tr-sidebar {
+  width: 240px;
+  background: var(--paper-2);
+  padding: 22px 18px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* Mobile bottom tab bar */
+.tr-mobile-tabs {
+  position: absolute;
+  left: 14px; right: 14px; bottom: 14px;
+  padding: 4px 10px;
+  border-radius: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background: var(--paper);
+  box-shadow: 8px 8px 20px var(--sh-hi), -4px -4px 12px var(--sh-lo);
+  z-index: 20;
+}
+
+button { font-family: inherit; cursor: pointer; }
+input, textarea, select { font-family: inherit; }
