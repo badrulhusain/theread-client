@@ -30,7 +30,7 @@ export interface Post {
   author: Author;
   createdAt: string;
   readTime: number;
-  tags: string[];
+  tags: Tag[];
   views: number;
   comments: number;
   reactions: number;

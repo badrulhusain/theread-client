@@ -8,30 +8,11 @@ interface SidebarProps {
   route: RouteKey;
   go: (r: RouteKey) => void;
   user: Author;
-  roleKey: string;
-  onRoleChange: (r: string) => void;
+  onLogout?: () => void;
 }
-export const Sidebar: React.FC<SidebarProps> = ({ route, go, user, roleKey, onRoleChange }) => (
+export const Sidebar: React.FC<SidebarProps> = ({ route, go, user, onLogout }) => (
   <aside className="tr-sidebar">
     <div style={{ padding: '0 6px' }}><Logo /></div>
-
-    {/* Role switcher */}
-    <div>
-      <div className="tr-mono" style={{ fontSize: 9, letterSpacing: '.2em', color: 'var(--ink-3)', textTransform: 'uppercase', marginBottom: 8, padding: '0 6px' }}>
-        Viewing as
-      </div>
-      <div className="neu-inset" style={{ display: 'flex', padding: 4, borderRadius: 12 }}>
-        {(['student', 'faculty', 'admin'] as const).map(r => (
-          <button key={r} onClick={() => onRoleChange(r)} className={roleKey === r ? 'neu-flat' : ''} style={{
-            flex: 1, border: 'none', background: roleKey === r ? 'var(--paper)' : 'transparent',
-            padding: '7px 6px', borderRadius: 9,
-            fontSize: 11, fontWeight: roleKey === r ? 600 : 500,
-            color: roleKey === r ? 'var(--burgundy)' : 'var(--ink-3)',
-            cursor: 'pointer', fontFamily: 'Inter,sans-serif', textTransform: 'capitalize',
-          }}>{r}</button>
-        ))}
-      </div>
-    </div>
 
     <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
       <div className="tr-mono" style={{ fontSize: 9, letterSpacing: '.2em', color: 'var(--ink-3)', textTransform: 'uppercase', padding: '0 6px 6px' }}>Journal</div>
@@ -53,7 +34,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ route, go, user, roleKey, onRo
         <div style={{ fontSize: 12.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
         <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{user.role}</div>
       </div>
-      <button style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer' }}>
+      <button onClick={onLogout} style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer' }}>
         <Icon name="logout" size={16} />
       </button>
     </div>

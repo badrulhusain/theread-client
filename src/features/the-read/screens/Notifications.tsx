@@ -1,8 +1,13 @@
 import React, { useState } from 'react';
 import { Avatar, NeuButton, NeuCard } from '../components/ui';
 import { Icon } from '../components/Icon';
-import { NOTIFICATIONS } from '../data';
 import type { Notification } from '../types';
+
+// Static notifications — no backend endpoint yet
+const NOTIFICATIONS: Notification[] = [
+  { id: 'n1', kind: 'editorial', actor: null, text: 'Welcome to The Read. Start exploring essays from the community.', target: null, time: 'Just now', unread: true },
+  { id: 'n2', kind: 'editorial', actor: null, text: 'New essays have been published. Check the feed for the latest.', target: null, time: 'Today', unread: false },
+];
 
 const iconFor = (kind: string) => ({ comment: 'comment', follow: 'user', reaction: 'heart', mention: 'feather', editorial: 'pin' }[kind] ?? 'bell');
 const colorFor = (kind: string) => ({ comment: 'var(--burgundy)', follow: 'var(--moss)', reaction: 'var(--tan-2)', mention: 'var(--burgundy)', editorial: 'var(--ink-2)' }[kind] ?? 'var(--ink-2)');
@@ -67,7 +72,6 @@ export const NotificationsDesktop: React.FC = () => {
           { id: 'unread', label: 'Unread', count: NOTIFICATIONS.filter(n => n.unread).length },
           { id: 'comment', label: 'Comments' },
           { id: 'reaction', label: 'Reactions' },
-          { id: 'follow', label: 'Follows' },
         ].map(f => (
           <button key={f.id} onClick={() => setFilter(f.id)}
             className={filter === f.id ? 'neu-inset' : 'neu-flat neu-press'}
@@ -81,7 +85,7 @@ export const NotificationsDesktop: React.FC = () => {
             }}
           >
             {f.label}
-            {f.count !== undefined && (
+            {f.count !== undefined && f.count > 0 && (
               <span style={{ background: 'var(--burgundy)', color: '#fbf8f2', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 999 }}>{f.count}</span>
             )}
           </button>
@@ -89,7 +93,10 @@ export const NotificationsDesktop: React.FC = () => {
       </div>
 
       <NeuCard padded={false} style={{ padding: '18px 20px' }}>
-        {items.map(n => <NotifRow key={n.id} n={n} />)}
+        {items.length === 0
+          ? <p style={{ textAlign: 'center', color: 'var(--ink-3)', padding: '20px 0' }}>No notifications.</p>
+          : items.map(n => <NotifRow key={n.id} n={n} />)
+        }
       </NeuCard>
     </div>
   );
