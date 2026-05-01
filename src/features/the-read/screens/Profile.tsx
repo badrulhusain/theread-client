@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Avatar, NeuButton, NeuCard, SectionHeading } from '../components/ui';
 import { Icon } from '../components/Icon';
-import { POSTS, tagById } from '../data';
+import { postsApi } from '../api';
 import type { Author, Post } from '../types';
 
 // ── Profile header ────────────────────────────────────────────────────────────
@@ -27,7 +27,7 @@ const ProfileHeader: React.FC<{ user: Author; compact?: boolean }> = ({ user, co
         </div>
         <h1 className="tr-display" style={{ margin: 0, fontSize: compact ? 24 : 36, fontWeight: 600, letterSpacing: '-0.02em' }}>{user.name}</h1>
         <div style={{ fontSize: compact ? 12 : 14, color: 'var(--ink-2)', marginTop: 4 }}>
-          {user.dept} · @{user.name.toLowerCase().replace(/\s/g, '.')}
+          {user.dept ? `${user.dept} · ` : ''}@{user.name.toLowerCase().replace(/\s/g, '.')}
         </div>
       </div>
       {!compact && (
@@ -40,7 +40,7 @@ const ProfileHeader: React.FC<{ user: Author; compact?: boolean }> = ({ user, co
   </div>
 );
 
-// ── Stat tile ─────────────────────────────────────────────────────────────────
+// ── Stat tile ──────────────────────────────��──────────────────────────────────
 const StatTile: React.FC<{ label: string; value: string | number; sub?: string }> = ({ label, value, sub }) => (
   <div className="neu-inset" style={{ padding: '18px 20px', borderRadius: 'calc(var(--radius) * 0.8)', textAlign: 'center' }}>
     <div className="tr-serif" style={{ fontSize: 34, fontWeight: 600, color: 'var(--burgundy)', lineHeight: 1 }}>{value}</div>
@@ -49,61 +49,93 @@ const StatTile: React.FC<{ label: string; value: string | number; sub?: string }
   </div>
 );
 
+// ── Post row ────────────────────────────────────────────────────────────���─────
+const PostRow: React.FC<{ post: Post; onOpen: (p: Post) => void; compact?: boolean }> = ({ post, onOpen, compact }) => (
+  <div onClick={() => onOpen(post)} style={{
+    display: 'flex', gap: compact ? 12 : 16,
+    padding: `${compact ? 14 : 18}px 0`,
+    borderBottom: '1px solid var(--line)', cursor: 'pointer',
+  }} className="hover-lift">
+    <div style={{
+      width: compact ? 60 : 72, height: compact ? 60 : 72, borderRadius: compact ? 8 : 10,
+      background: post.cover,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      color: '#fbf8f2', fontSize: compact ? 22 : 28, flexShrink: 0,
+      boxShadow: '2px 2px 8px var(--sh-hi)',
+    }}>{post.coverAccent}</div>
+    <div style={{ flex: 1 }}>
+      {!compact && (
+        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+          {post.tags.slice(0, 2).map(t => (
+            <span key={t.id} style={{ fontSize: 10, fontWeight: 600, color: t.hue }}>{t.name}</span>
+          ))}
+        </div>
+      )}
+      <h4 className="tr-serif" style={{ margin: `0 0 4px`, fontSize: compact ? 14 : 17, fontWeight: 600, lineHeight: 1.25 }}>{post.title}</h4>
+      <div style={{ display: 'flex', gap: compact ? 10 : 12, color: 'var(--ink-3)', fontSize: compact ? 11 : 11.5 }}>
+        <span>{post.readTime} min</span>
+        <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="eye" size={compact ? 11 : 12} />{post.views}</span>
+        <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="comment" size={compact ? 11 : 12} />{post.comments}</span>
+      </div>
+    </div>
+  </div>
+);
+
 // ── Profile Desktop ───────────────────────────────────────────────────────────
 export const ProfileDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) => void }> = ({ user, nav }) => {
-  const authorPosts = POSTS.filter(p => p.author.id === user.id).slice(0, 3);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    postsApi.list({ limit: 50 })
+      .then(all => setPosts(all.filter(p => p.author.id === user.id)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [user.id]);
+
+  const totalViews = posts.reduce((s, p) => s + p.views, 0);
+
   return (
     <div style={{ padding: '28px 32px 60px', display: 'flex', flexDirection: 'column', gap: 24 }}>
       <ProfileHeader user={user} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
-        <StatTile label="Essays" value={14} />
-        <StatTile label="Followers" value="1.2k" />
-        <StatTile label="Following" value={38} />
-        <StatTile label="Total reads" value="8.4k" />
+        <StatTile label="Essays" value={posts.length} />
+        <StatTile label="Total reads" value={totalViews > 999 ? `${(totalViews / 1000).toFixed(1)}k` : totalViews} />
+        <StatTile label="Role" value={user.role === 'ADMIN' ? 'Admin' : user.role === 'AUTHOR' ? 'Author' : 'Reader'} />
+        <StatTile label="Member" value={user.year || '—'} />
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 300px', gap: 24 }}>
         <div>
           <SectionHeading eyebrow="Published" title="Essays" />
-          {(authorPosts.length > 0 ? authorPosts : POSTS.slice(0, 3)).map(p => (
-            <div key={p.id} className="hover-lift" onClick={() => nav('post', p)} style={{
-              display: 'flex', gap: 16, padding: '18px 0', borderBottom: '1px solid var(--line)', cursor: 'pointer',
-            }}>
-              <div style={{
-                width: 72, height: 72, borderRadius: 10, background: p.cover,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fbf8f2', fontSize: 28, flexShrink: 0,
-                boxShadow: '2px 2px 8px var(--sh-hi)',
-              }}>{p.coverAccent}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-                  {p.tags.slice(0, 2).map(t => {
-                    const tag = tagById(t);
-                    return <span key={t} style={{ fontSize: 10, fontWeight: 600, color: tag.hue }}>{tag.name}</span>;
-                  })}
-                </div>
-                <h4 className="tr-serif" style={{ margin: '0 0 4px', fontSize: 17, fontWeight: 600, lineHeight: 1.25 }}>{p.title}</h4>
-                <div style={{ display: 'flex', gap: 12, color: 'var(--ink-3)', fontSize: 11.5 }}>
-                  <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="eye" size={12} />{p.views}</span>
-                  <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="heart" size={12} />{p.reactions}</span>
-                  <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="comment" size={12} />{p.comments}</span>
+          {loading ? (
+            [1, 2, 3].map(i => (
+              <div key={i} style={{ display: 'flex', gap: 16, padding: '18px 0', borderBottom: '1px solid var(--line)' }}>
+                <div className="neu-inset" style={{ width: 72, height: 72, borderRadius: 10 }} />
+                <div style={{ flex: 1 }}>
+                  <div className="neu-inset" style={{ height: 14, width: '70%', borderRadius: 6, marginBottom: 8 }} />
+                  <div className="neu-inset" style={{ height: 10, width: '40%', borderRadius: 6 }} />
                 </div>
               </div>
-            </div>
-          ))}
+            ))
+          ) : posts.length === 0 ? (
+            <p style={{ color: 'var(--ink-3)', fontSize: 14 }}>No essays published yet.</p>
+          ) : (
+            posts.slice(0, 6).map(p => <PostRow key={p.id} post={p} onOpen={p => nav('post', p)} />)
+          )}
         </div>
 
         <NeuCard>
           <div className="tr-mono" style={{ fontSize: 10, letterSpacing: '.2em', color: 'var(--tan-2)', textTransform: 'uppercase', marginBottom: 12 }}>About</div>
           <p className="tr-serif" style={{ margin: '0 0 16px', fontSize: 15, lineHeight: 1.6, color: 'var(--ink-2)', fontStyle: 'italic' }}>
-            "Writing about the slow pleasures of reading, the campus as a place of thought, and the things you notice when you stop moving."
+            "Contributor to The Read campus journal."
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10, fontSize: 13, color: 'var(--ink-2)' }}>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Icon name="book" size={14} />{user.dept}</div>
-            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Icon name="globe" size={14} />Ashworth College, Class of 2027</div>
+            {user.dept && <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Icon name="book" size={14} />{user.dept}</div>}
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Icon name="globe" size={14} />Ashworth College</div>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}><Icon name="mail" size={14} />
-              {user.name.toLowerCase().replace(/\s/g, '.')}@ashworth.edu
+              {user.name.toLowerCase().replace(/[\s.]+/g, '.')}@ashworth.edu
             </div>
           </div>
         </NeuCard>
@@ -112,35 +144,41 @@ export const ProfileDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) =>
   );
 };
 
-// ── Profile Mobile ────────────────────────────────────────────────────────────
+// ── Profile Mobile ──────────────────────────────────────────────────────���─────
 export const ProfileMobile: React.FC<{ user: Author; nav: (r: any, p?: Post) => void }> = ({ user, nav }) => {
-  const authorPosts = POSTS.filter(p => p.author.id === user.id);
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    postsApi.list({ limit: 50 })
+      .then(all => setPosts(all.filter(p => p.author.id === user.id)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [user.id]);
+
   return (
     <div style={{ padding: '14px 16px 90px' }}>
       <ProfileHeader user={user} compact />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginTop: 16, marginBottom: 20 }}>
-        <StatTile label="Essays" value={14} />
-        <StatTile label="Followers" value="1.2k" />
+        <StatTile label="Essays" value={posts.length} />
+        <StatTile label="Total reads" value={posts.reduce((s, p) => s + p.views, 0)} />
       </div>
       <SectionHeading eyebrow="Published" title="Essays" />
-      {(authorPosts.length > 0 ? authorPosts : POSTS.slice(0, 3)).map(p => (
-        <div key={p.id} onClick={() => nav('post', p)} style={{
-          display: 'flex', gap: 12, padding: '14px 0', borderBottom: '1px solid var(--line)', cursor: 'pointer',
-        }}>
-          <div style={{
-            width: 60, height: 60, borderRadius: 8, background: p.cover,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#fbf8f2', fontSize: 22, flexShrink: 0,
-          }}>{p.coverAccent}</div>
-          <div style={{ flex: 1 }}>
-            <h4 className="tr-serif" style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, lineHeight: 1.3 }}>{p.title}</h4>
-            <div style={{ display: 'flex', gap: 10, color: 'var(--ink-3)', fontSize: 11 }}>
-              <span>{p.readTime} min</span>
-              <span style={{ display: 'flex', gap: 3, alignItems: 'center' }}><Icon name="heart" size={11} />{p.reactions}</span>
+      {loading ? (
+        [1, 2].map(i => (
+          <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
+            <div className="neu-inset" style={{ width: 60, height: 60, borderRadius: 8 }} />
+            <div style={{ flex: 1 }}>
+              <div className="neu-inset" style={{ height: 14, width: '70%', borderRadius: 6, marginBottom: 8 }} />
+              <div className="neu-inset" style={{ height: 10, width: '40%', borderRadius: 6 }} />
             </div>
           </div>
-        </div>
-      ))}
+        ))
+      ) : posts.length === 0 ? (
+        <p style={{ color: 'var(--ink-3)', fontSize: 13 }}>No essays published yet.</p>
+      ) : (
+        posts.map(p => <PostRow key={p.id} post={p} onOpen={p => nav('post', p)} compact />)
+      )}
     </div>
   );
 };
