@@ -7,7 +7,7 @@ import { relTime } from '../data';
 import type { Author, Post } from '../types';
 
 // ── Greeting hero ─────────────────────────────────────────────────────────────
-const GreetingHero: React.FC<{ user: Author; compact?: boolean }> = ({ user, compact = false }) => {
+const GreetingHero: React.FC<{ user: Author; compact?: boolean; nav?: (r: any) => void }> = ({ user, compact = false, nav }) => {
   const hour = new Date().getHours();
   const greet = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   return (
@@ -37,8 +37,8 @@ const GreetingHero: React.FC<{ user: Author; compact?: boolean }> = ({ user, com
       </p>
       {!compact && (
         <div style={{ display: 'flex', gap: 12, marginTop: 20, flexWrap: 'wrap' }}>
-          <NeuButton primary icon="feather">Write an essay</NeuButton>
-          <NeuButton icon="feed">Browse feed</NeuButton>
+          <NeuButton primary icon="feather" onClick={() => nav?.('write')}>Write an essay</NeuButton>
+          <NeuButton icon="feed" onClick={() => nav?.('feed')}>Browse feed</NeuButton>
         </div>
       )}
     </div>
@@ -119,7 +119,7 @@ export const DashboardDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, padding: '28px 32px', paddingBottom: 40 }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
-        <GreetingHero user={user} />
+        <GreetingHero user={user} nav={nav} />
 
         <div>
           <SectionHeading
@@ -248,7 +248,7 @@ export const DashboardMobile: React.FC<{ user: Author; nav: (r: any, p?: Post) =
 
   return (
     <div style={{ padding: '14px 16px 90px', display: 'flex', flexDirection: 'column', gap: 16 }}>
-      <GreetingHero user={user} compact />
+      <GreetingHero user={user} compact nav={nav} />
       <div>
         <SectionHeading eyebrow="Editor's desk" title="This week" />
         {loading ? (

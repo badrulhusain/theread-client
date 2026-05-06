@@ -171,6 +171,7 @@ export const postsApi = {
     title: string;
     content: string;
     excerpt?: string;
+    coverImage?: string;
     tagIds?: string[];
     status?: 'DRAFT' | 'PUBLISHED';
   }): Promise<Post> => {
@@ -184,6 +185,22 @@ export const tagsApi = {
   list: async (): Promise<Tag[]> => {
     const { data } = await http.get('/tags');
     return (Array.isArray(data) ? data : (data.data ?? [])).map(mapTag);
+  },
+  create: async (name: string): Promise<Tag> => {
+    const { data } = await http.post('/tags', { name });
+    return mapTag(data);
+  },
+};
+
+// ── Uploads ────────────────────────────────────────────────────────────────────
+export const uploadsApi = {
+  uploadImage: async (file: File): Promise<string> => {
+    const form = new FormData();
+    form.append('file', file);
+    const { data } = await http.post('/uploads/image', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return data.url as string;
   },
 };
 

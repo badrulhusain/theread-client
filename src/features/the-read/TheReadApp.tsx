@@ -51,7 +51,7 @@ const AppInner: React.FC = () => {
       <div className="tr-layout">
         <Sidebar route={route} go={go} user={user!} onLogout={logout} />
         <div className="tr-main">
-          <TopBar route={route} />
+          <TopBar route={route} onBell={() => go('notifications')} />
           <div className="frame-scroll" style={{ flex: 1, minHeight: 0 }}>
             {route === 'dashboard' && <DashboardDesktop user={user!} nav={go} />}
             {route === 'feed' && <FeedDesktop nav={go} />}
@@ -82,7 +82,7 @@ const AppInner: React.FC = () => {
           {route === 'dashboard' && <DashboardMobile user={user!} nav={go} />}
           {route === 'feed' && <FeedMobile nav={go} />}
           {route === 'write' && <WriteMobile user={user!} nav={go} />}
-          {route === 'post' && currentPost && <PostMobile post={currentPost} nav={go} />}
+          {route === 'post' && currentPost && <PostMobile post={currentPost} nav={go} user={user!} />}
           {route === 'notifications' && (
             <div style={{ padding: '14px 16px 90px' }}>
               <h1 className="tr-display" style={{ margin: '0 0 14px', fontSize: 28, fontWeight: 600 }}>Notifications</h1>

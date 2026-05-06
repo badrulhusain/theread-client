@@ -5,7 +5,7 @@ import { postsApi } from '../api';
 import type { Author, Post } from '../types';
 
 // ── Profile header ────────────────────────────────────────────────────────────
-const ProfileHeader: React.FC<{ user: Author; compact?: boolean }> = ({ user, compact = false }) => (
+const ProfileHeader: React.FC<{ user: Author; compact?: boolean; nav?: (r: any) => void }> = ({ user, compact = false, nav }) => (
   <div className="neu" style={{ borderRadius: 'var(--radius)', padding: compact ? 20 : '32px 36px', position: 'relative', overflow: 'hidden' }}>
     <div style={{
       position: 'absolute', top: 0, left: 0, right: 0, height: compact ? 80 : 120,
@@ -33,7 +33,7 @@ const ProfileHeader: React.FC<{ user: Author; compact?: boolean }> = ({ user, co
       {!compact && (
         <div style={{ display: 'flex', gap: 8, paddingTop: 30 }}>
           <NeuButton icon="settings">Edit profile</NeuButton>
-          <NeuButton primary icon="feather">New essay</NeuButton>
+          <NeuButton primary icon="feather" onClick={() => nav?.('write')}>New essay</NeuButton>
         </div>
       )}
     </div>
@@ -97,7 +97,7 @@ export const ProfileDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) =>
 
   return (
     <div style={{ padding: '28px 32px 60px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <ProfileHeader user={user} />
+      <ProfileHeader user={user} nav={nav} />
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
         <StatTile label="Essays" value={posts.length} />

@@ -235,45 +235,64 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
 };
 
 // ── Post Mobile ───────────────────────────────────────────────────────────────
-export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void }> = ({ post, nav }) => (
-  <div style={{ padding: '14px 18px 90px' }}>
-    <button onClick={() => nav('feed')} className="neu-flat" style={{
-      border: 'none', padding: '6px 12px', borderRadius: 999,
-      display: 'inline-flex', alignItems: 'center', gap: 6,
-      fontSize: 12, color: 'var(--ink-2)', marginBottom: 18, fontFamily: 'Inter,sans-serif', background: 'var(--paper)',
-    }}>
-      <Icon name="arrow-left" size={13} /> Back
-    </button>
-    <div style={{ display: 'flex', gap: 5, marginBottom: 10 }}>
-      {post.tags.map(t => <Pill key={t.id} color={t.hue} small>{t.name}</Pill>)}
-    </div>
-    <h1 className="tr-display" style={{ margin: '0 0 12px', fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{post.title}</h1>
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-      <Avatar user={post.author} size={32} ring />
-      <div style={{ flex: 1, lineHeight: 1.25 }}>
-        <div style={{ fontSize: 13, fontWeight: 600 }}>{post.author.name}</div>
-        <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{formatDate(post.createdAt)} · {post.readTime} min</div>
+export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Author }> = ({ post, nav, user }) => {
+  const [comments, setComments] = useState<ApiComment[]>([]);
+
+  const loadComments = () => {
+    commentsApi.listForPost(post.id).then(setComments).catch(() => {});
+  };
+
+  useEffect(() => { loadComments(); }, [post.id]);
+
+  return (
+    <div style={{ padding: '14px 18px 90px' }}>
+      <button onClick={() => nav('feed')} className="neu-flat" style={{
+        border: 'none', padding: '6px 12px', borderRadius: 999,
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        fontSize: 12, color: 'var(--ink-2)', marginBottom: 18, fontFamily: 'Inter,sans-serif', background: 'var(--paper)',
+      }}>
+        <Icon name="arrow-left" size={13} /> Back
+      </button>
+      <div style={{ display: 'flex', gap: 5, marginBottom: 10 }}>
+        {post.tags.map(t => <Pill key={t.id} color={t.hue} small>{t.name}</Pill>)}
+      </div>
+      <h1 className="tr-display" style={{ margin: '0 0 12px', fontSize: 28, fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15 }}>{post.title}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+        <Avatar user={post.author} size={32} ring />
+        <div style={{ flex: 1, lineHeight: 1.25 }}>
+          <div style={{ fontSize: 13, fontWeight: 600 }}>{post.author.name}</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{formatDate(post.createdAt)} · {post.readTime} min</div>
+        </div>
+      </div>
+      <div style={{
+        height: 180, borderRadius: 14, background: post.cover,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fbf8f2', fontSize: 68, fontFamily: "'Fraunces',serif", marginBottom: 22,
+      }}>
+        <div style={{ opacity: .4 }}>{post.coverAccent}</div>
+      </div>
+      <article>
+        {(post.content.length > 0 ? post.content : [{ type: 'p' as const, text: post.excerpt }]).map((b, i) => {
+          if (b.type === 'p') return <p key={i} className="tr-serif" style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.7, color: 'var(--ink)' }}>{b.text}</p>;
+          if (b.type === 'h2') return <h2 key={i} className="tr-serif" style={{ margin: '20px 0 10px', fontSize: 19, fontWeight: 500 }}>{b.text}</h2>;
+          if (b.type === 'pull') return <aside key={i} style={{ margin: '16px 0', padding: '12px 16px', borderLeft: '3px solid var(--burgundy)', fontFamily: "'Fraunces',serif", fontStyle: 'italic', fontSize: 17, color: 'var(--burgundy)', lineHeight: 1.4 }}>{b.text}</aside>;
+          return null;
+        })}
+      </article>
+      {user && (
+        <div style={{ marginTop: 24 }}>
+          <h3 className="tr-serif" style={{ fontSize: 18, fontWeight: 500, margin: '0 0 12px' }}>
+            {comments.length} {comments.length === 1 ? 'response' : 'responses'}
+          </h3>
+          <CommentBox user={user} postId={post.id} onPosted={loadComments} />
+          {comments.map(c => <CommentRow key={c.id} comment={c} />)}
+        </div>
+      )}
+      <div style={{ position: 'sticky', bottom: 70, zIndex: 10, marginTop: 24 }}>
+        <div className="neu" style={{ padding: 10, borderRadius: 999, display: 'flex', justifyContent: 'space-around' }}>
+          <PostActions post={post} />
+        </div>
       </div>
     </div>
-    <div style={{
-      height: 180, borderRadius: 14, background: post.cover,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: '#fbf8f2', fontSize: 68, fontFamily: "'Fraunces',serif", marginBottom: 22,
-    }}>
-      <div style={{ opacity: .4 }}>{post.coverAccent}</div>
-    </div>
-    <article>
-      {(post.content.length > 0 ? post.content : [{ type: 'p' as const, text: post.excerpt }]).map((b, i) => {
-        if (b.type === 'p') return <p key={i} className="tr-serif" style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.7, color: 'var(--ink)' }}>{b.text}</p>;
-        if (b.type === 'h2') return <h2 key={i} className="tr-serif" style={{ margin: '20px 0 10px', fontSize: 19, fontWeight: 500 }}>{b.text}</h2>;
-        if (b.type === 'pull') return <aside key={i} style={{ margin: '16px 0', padding: '12px 16px', borderLeft: '3px solid var(--burgundy)', fontFamily: "'Fraunces',serif", fontStyle: 'italic', fontSize: 17, color: 'var(--burgundy)', lineHeight: 1.4 }}>{b.text}</aside>;
-        return null;
-      })}
-    </article>
-    <div style={{ position: 'sticky', bottom: 70, zIndex: 10, marginTop: 24 }}>
-      <div className="neu" style={{ padding: 10, borderRadius: 999, display: 'flex', justifyContent: 'space-around' }}>
-        <PostActions post={post} />
-      </div>
-    </div>
-  </div>
-);
+  );
+};
