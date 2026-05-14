@@ -121,15 +121,18 @@ export function mapPost(p: any): Post {
     excerpt: p.excerpt ?? '',
     cover,
     coverAccent: accentFor(p.id),
+    coverImageUrl: p.coverImage && !p.coverImage.startsWith('linear-gradient') ? p.coverImage : undefined,
     author: mapUser(p.author),
     createdAt: p.publishedAt ?? p.createdAt ?? new Date().toISOString(),
     readTime: readTimeFrom(p.content ?? ''),
     tags: rawTags,
     views: p.viewCount ?? 0,
     comments: p._count?.comments ?? (Array.isArray(p.comments) ? p.comments.length : 0),
-    reactions: 0,
+    reactions: p._count?.likes ?? 0,
     featured: p.featured ?? p.status === 'PUBLISHED',
     content: contentFrom(p.content ?? ''),
+    status: p.status,
+    rawContent: p.content ?? '',
   };
 }
 
@@ -178,6 +181,31 @@ export const postsApi = {
     const { data } = await http.post('/posts', payload);
     return mapPost(data);
   },
+  update: async (id: string, payload: {
+    title?: string;
+    content?: string;
+    excerpt?: string;
+    coverImage?: string | null;
+    tagIds?: string[];
+    status?: 'DRAFT' | 'PUBLISHED';
+  }): Promise<Post> => {
+    const { data } = await http.patch(`/posts/${id}`, payload);
+    return mapPost(data);
+  },
+  delete: async (id: string): Promise<void> => {
+    await http.delete(`/posts/${id}`);
+  },
+  incrementView: async (slug: string): Promise<void> => {
+    await http.post(`/posts/slug/${slug}/view`);
+  },
+  toggleLike: async (postId: string): Promise<{ liked: boolean; likeCount: number }> => {
+    const { data } = await http.post(`/posts/${postId}/like`);
+    return data;
+  },
+  getLikeStatus: async (postId: string): Promise<{ liked: boolean; likeCount: number }> => {
+    const { data } = await http.get(`/posts/${postId}/like-status`);
+    return data;
+  },
 };
 
 // ── Tags ───────────────────────────────────────────────────────────────────────
@@ -221,5 +249,12 @@ export const commentsApi = {
   create: async (postId: string, content: string): Promise<ApiComment> => {
     const { data } = await http.post('/comments', { postId, content });
     return data;
+  },
+  update: async (id: string, content: string): Promise<ApiComment> => {
+    const { data } = await http.patch(`/comments/${id}`, { content });
+    return data;
+  },
+  delete: async (id: string): Promise<void> => {
+    await http.delete(`/comments/${id}`);
   },
 };

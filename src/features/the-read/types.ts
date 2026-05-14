@@ -27,6 +27,7 @@ export interface Post {
   excerpt: string;
   cover: string;
   coverAccent: string;
+  coverImageUrl?: string;
   author: Author;
   createdAt: string;
   readTime: number;
@@ -36,6 +37,8 @@ export interface Post {
   reactions: number;
   featured?: boolean;
   content: ContentBlock[];
+  status?: 'DRAFT' | 'PUBLISHED' | 'ARCHIVED';
+  rawContent?: string;
 }
 
 export interface Announcement {

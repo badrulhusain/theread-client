@@ -50,36 +50,79 @@ const StatTile: React.FC<{ label: string; value: string | number; sub?: string }
 );
 
 // ── Post row ────────────────────────────────────────────────────────────���─────
-const PostRow: React.FC<{ post: Post; onOpen: (p: Post) => void; compact?: boolean }> = ({ post, onOpen, compact }) => (
-  <div onClick={() => onOpen(post)} style={{
-    display: 'flex', gap: compact ? 12 : 16,
-    padding: `${compact ? 14 : 18}px 0`,
-    borderBottom: '1px solid var(--line)', cursor: 'pointer',
-  }} className="hover-lift">
-    <div style={{
-      width: compact ? 60 : 72, height: compact ? 60 : 72, borderRadius: compact ? 8 : 10,
-      background: post.cover,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      color: '#fbf8f2', fontSize: compact ? 22 : 28, flexShrink: 0,
-      boxShadow: '2px 2px 8px var(--sh-hi)',
-    }}>{post.coverAccent}</div>
-    <div style={{ flex: 1 }}>
-      {!compact && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
-          {post.tags.slice(0, 2).map(t => (
-            <span key={t.id} style={{ fontSize: 10, fontWeight: 600, color: t.hue }}>{t.name}</span>
-          ))}
+const PostRow: React.FC<{
+  post: Post;
+  onOpen: (p: Post) => void;
+  onEdit?: (p: Post) => void;
+  onDelete?: (id: string) => void;
+  compact?: boolean;
+}> = ({ post, onOpen, onEdit, onDelete, compact }) => {
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Delete this post?')) return;
+    setDeleting(true);
+    try {
+      await postsApi.delete(post.id);
+      onDelete?.(post.id);
+    } catch {
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div onClick={() => onOpen(post)} style={{
+      display: 'flex', gap: compact ? 12 : 16,
+      padding: `${compact ? 14 : 18}px 0`,
+      borderBottom: '1px solid var(--line)', cursor: 'pointer',
+    }} className="hover-lift">
+      <div style={{
+        width: compact ? 60 : 72, height: compact ? 60 : 72, borderRadius: compact ? 8 : 10,
+        background: post.cover,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        color: '#fbf8f2', fontSize: compact ? 22 : 28, flexShrink: 0,
+        boxShadow: '2px 2px 8px var(--sh-hi)',
+      }}>{post.coverAccent}</div>
+      <div style={{ flex: 1 }}>
+        {!compact && (
+          <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
+            {post.tags.slice(0, 2).map(t => (
+              <span key={t.id} style={{ fontSize: 10, fontWeight: 600, color: t.hue }}>{t.name}</span>
+            ))}
+          </div>
+        )}
+        <h4 className="tr-serif" style={{ margin: `0 0 4px`, fontSize: compact ? 14 : 17, fontWeight: 600, lineHeight: 1.25 }}>{post.title}</h4>
+        <div style={{ display: 'flex', gap: compact ? 10 : 12, color: 'var(--ink-3)', fontSize: compact ? 11 : 11.5, alignItems: 'center' }}>
+          <span>{post.readTime} min</span>
+          <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="eye" size={compact ? 11 : 12} />{post.views}</span>
+          <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="comment" size={compact ? 11 : 12} />{post.comments}</span>
+          {(onEdit || onDelete) && (
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }} onClick={e => e.stopPropagation()}>
+              {onEdit && (
+                <button onClick={e => { e.stopPropagation(); onEdit(post); }} style={{
+                  background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer',
+                  fontSize: 11, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 3, padding: 0,
+                }}>
+                  <Icon name="edit" size={11} /> Edit
+                </button>
+              )}
+              {onDelete && (
+                <button onClick={handleDelete} disabled={deleting} style={{
+                  background: 'none', border: 'none', color: 'var(--burgundy)', cursor: 'pointer',
+                  fontSize: 11, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 3, padding: 0,
+                  opacity: deleting ? 0.5 : 1,
+                }}>
+                  <Icon name="trash" size={11} /> {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              )}
+            </div>
+          )}
         </div>
-      )}
-      <h4 className="tr-serif" style={{ margin: `0 0 4px`, fontSize: compact ? 14 : 17, fontWeight: 600, lineHeight: 1.25 }}>{post.title}</h4>
-      <div style={{ display: 'flex', gap: compact ? 10 : 12, color: 'var(--ink-3)', fontSize: compact ? 11 : 11.5 }}>
-        <span>{post.readTime} min</span>
-        <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="eye" size={compact ? 11 : 12} />{post.views}</span>
-        <span style={{ display: 'flex', gap: 4, alignItems: 'center' }}><Icon name="comment" size={compact ? 11 : 12} />{post.comments}</span>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // ── Profile Desktop ───────────────────────────────────────────────────────────
 export const ProfileDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) => void }> = ({ user, nav }) => {
@@ -122,7 +165,15 @@ export const ProfileDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) =>
           ) : posts.length === 0 ? (
             <p style={{ color: 'var(--ink-3)', fontSize: 14 }}>No essays published yet.</p>
           ) : (
-            posts.slice(0, 6).map(p => <PostRow key={p.id} post={p} onOpen={p => nav('post', p)} />)
+            posts.slice(0, 6).map(p => (
+              <PostRow
+                key={p.id}
+                post={p}
+                onOpen={p => nav('post', p)}
+                onEdit={p => nav('write', p)}
+                onDelete={id => setPosts(ps => ps.filter(x => x.id !== id))}
+              />
+            ))
           )}
         </div>
 
@@ -177,7 +228,16 @@ export const ProfileMobile: React.FC<{ user: Author; nav: (r: any, p?: Post) => 
       ) : posts.length === 0 ? (
         <p style={{ color: 'var(--ink-3)', fontSize: 13 }}>No essays published yet.</p>
       ) : (
-        posts.map(p => <PostRow key={p.id} post={p} onOpen={p => nav('post', p)} compact />)
+        posts.map(p => (
+          <PostRow
+            key={p.id}
+            post={p}
+            onOpen={p => nav('post', p)}
+            onEdit={p => nav('write', p)}
+            onDelete={id => setPosts(ps => ps.filter(x => x.id !== id))}
+            compact
+          />
+        ))
       )}
     </div>
   );

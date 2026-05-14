@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NeuButton, NeuCard, Ornament, Pill } from '../components/ui';
 import { Icon } from '../components/Icon';
 import { postsApi, tagsApi, uploadsApi } from '../api';
-import type { Author, Tag } from '../types';
+import type { Author, Post, Tag } from '../types';
 
 // ── Toolbar ───────────────────────────────────────────────────────────────────
 const ComposeToolbar: React.FC = () => (
@@ -31,19 +31,20 @@ const ComposeToolbar: React.FC = () => (
 );
 
 // ── Write Desktop ─────────────────────────────────────────────────────────────
-export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void }> = ({ user, nav }) => {
-  const [title, setTitle] = useState('');
-  const [excerpt, setExcerpt] = useState('');
-  const [body, setBody] = useState('');
-  const [coverImage, setCoverImage] = useState<string | null>(null);
+export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void; editPost?: Post }> = ({ user, nav, editPost }) => {
+  const [title, setTitle] = useState(editPost?.title ?? '');
+  const [excerpt, setExcerpt] = useState(editPost?.excerpt ?? '');
+  const [body, setBody] = useState(editPost?.rawContent ?? '');
+  const [coverImage, setCoverImage] = useState<string | null>(editPost?.coverImageUrl ?? null);
   const [uploadingCover, setUploadingCover] = useState(false);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED'>('DRAFT');
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(editPost?.tags.map(t => t.id) ?? []);
+  const [status, setStatus] = useState<'DRAFT' | 'PUBLISHED'>(editPost?.status === 'PUBLISHED' ? 'PUBLISHED' : 'DRAFT');
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
   const [newTagName, setNewTagName] = useState('');
   const [addingTag, setAddingTag] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -85,21 +86,28 @@ export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void }> = (
   const wordCount = body.split(/\s+/).filter(Boolean).length;
 
   const handleSubmit = async () => {
-    if (!title.trim()) return;
+    if (!title.trim()) { setSubmitError('Please add a title before publishing.'); return; }
     setSubmitting(true);
+    setSubmitError('');
     try {
-      await postsApi.create({
+      const payload = {
         title: title.trim(),
         content: body,
         excerpt: excerpt.trim() || undefined,
-        coverImage: coverImage ?? undefined,
+        coverImage: coverImage ?? null,
         tagIds: selectedTagIds,
         status,
-      });
+      };
+      if (editPost) {
+        await postsApi.update(editPost.id, payload);
+      } else {
+        await postsApi.create({ ...payload, coverImage: payload.coverImage ?? undefined });
+      }
       setSaved(true);
-      setTimeout(() => nav('feed'), 1200);
-    } catch {
-      // stay on page
+      setTimeout(() => nav('profile'), 1200);
+    } catch (e: any) {
+      const msg = e?.response?.data?.message;
+      setSubmitError(Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Something went wrong. Please try again.'));
     } finally {
       setSubmitting(false);
     }
@@ -116,7 +124,7 @@ export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void }> = (
             <Icon name="arrow-left" size={14} /> Back
           </button>
           <div className="tr-mono" style={{ fontSize: 10, letterSpacing: '.2em', color: 'var(--tan-2)', textTransform: 'uppercase', marginLeft: 8 }}>
-            Composing · {status === 'DRAFT' ? 'Draft' : 'Publishing'}
+            {editPost ? 'Editing' : 'Composing'} · {status === 'DRAFT' ? 'Draft' : 'Publishing'}
           </div>
           <div style={{ flex: 1 }} />
           {saved && (
@@ -186,6 +194,9 @@ export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void }> = (
               }}>{s === 'DRAFT' ? 'Save draft' : 'Publish'}</button>
             ))}
           </div>
+          {submitError && (
+            <div style={{ fontSize: 11.5, color: 'var(--burgundy)', marginBottom: 10, lineHeight: 1.4 }}>{submitError}</div>
+          )}
           <NeuButton primary icon={status === 'PUBLISHED' ? 'feather' : 'bookmark'} onClick={handleSubmit} style={{ width: '100%', justifyContent: 'center' }}>
             {submitting ? 'Saving…' : status === 'PUBLISHED' ? 'Publish to The Read' : 'Save draft'}
           </NeuButton>
@@ -301,17 +312,18 @@ export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void }> = (
 };
 
 // ── Write Mobile ──────────────────────────────────────────────────────────────
-export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void }> = ({ user: _user, nav }) => {
-  const [title, setTitle] = useState('');
-  const [excerpt, setExcerpt] = useState('');
-  const [body, setBody] = useState('');
-  const [coverImage, setCoverImage] = useState<string | null>(null);
+export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void; editPost?: Post }> = ({ user: _user, nav, editPost }) => {
+  const [title, setTitle] = useState(editPost?.title ?? '');
+  const [excerpt, setExcerpt] = useState(editPost?.excerpt ?? '');
+  const [body, setBody] = useState(editPost?.rawContent ?? '');
+  const [coverImage, setCoverImage] = useState<string | null>(editPost?.coverImageUrl ?? null);
   const [uploadingCover, setUploadingCover] = useState(false);
   const [availableTags, setAvailableTags] = useState<Tag[]>([]);
-  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>(editPost?.tags.map(t => t.id) ?? []);
   const [newTagName, setNewTagName] = useState('');
   const [addingTag, setAddingTag] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const coverInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -351,19 +363,26 @@ export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void }> = ({
   };
 
   const handlePublish = async () => {
-    if (!title.trim()) return;
+    if (!title.trim()) { setSubmitError('Please add a title.'); return; }
     setSubmitting(true);
+    setSubmitError('');
     try {
-      await postsApi.create({
+      const payload = {
         title: title.trim(),
         content: body,
         excerpt: excerpt.trim() || undefined,
-        coverImage: coverImage ?? undefined,
         tagIds: selectedTagIds,
-        status: 'PUBLISHED',
-      });
-      nav('feed');
-    } catch {
+        status: 'PUBLISHED' as const,
+      };
+      if (editPost) {
+        await postsApi.update(editPost.id, { ...payload, coverImage: coverImage });
+      } else {
+        await postsApi.create({ ...payload, coverImage: coverImage ?? undefined });
+      }
+      nav('profile');
+    } catch (e: any) {
+      const msg = e?.response?.data?.message;
+      setSubmitError(Array.isArray(msg) ? msg.join(', ') : (msg ?? 'Something went wrong. Please try again.'));
       setSubmitting(false);
     }
   };
@@ -379,6 +398,9 @@ export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void }> = ({
           <Icon name="arrow-left" size={13} /> Back
         </button>
         <div style={{ flex: 1 }} />
+        {submitError && (
+          <span style={{ fontSize: 11, color: 'var(--burgundy)', maxWidth: 140, lineHeight: 1.3 }}>{submitError}</span>
+        )}
         <NeuButton small primary onClick={handlePublish}>{submitting ? 'Publishing…' : 'Publish'}</NeuButton>
       </div>
 

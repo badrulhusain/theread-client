@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Avatar, Divider, NeuButton, NeuCard, Ornament, Pill } from '../components/ui';
 import { Icon } from '../components/Icon';
-import { commentsApi } from '../api';
+import { commentsApi, postsApi } from '../api';
 import { formatDate, relTime } from '../data';
 import type { Author, ContentBlock, Post } from '../types';
 import type { ApiComment } from '../api';
@@ -30,13 +30,35 @@ const renderBlock = (block: ContentBlock, i: number) => {
 };
 
 // ── Post actions ──────────────────────────────────────────────────────────────
-const PostActions: React.FC<{ post: Post; vertical?: boolean }> = ({ post, vertical = false }) => {
+const PostActions: React.FC<{ post: Post; commentCount: number; views: number; vertical?: boolean }> = ({ post, commentCount, views, vertical = false }) => {
   const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(post.reactions);
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    postsApi.getLikeStatus(post.id)
+      .then(({ liked: isLiked, likeCount: count }) => {
+        setLiked(isLiked);
+        setLikeCount(count);
+      })
+      .catch(() => {});
+  }, [post.id]);
+
+  const handleLike = async () => {
+    try {
+      const result = await postsApi.toggleLike(post.id);
+      setLiked(result.liked);
+      setLikeCount(result.likeCount);
+    } catch {
+      setLiked(l => !l);
+      setLikeCount(c => liked ? c - 1 : c + 1);
+    }
+  };
+
   const items = [
-    { icon: 'heart', count: post.reactions + (liked ? 1 : 0), active: liked, onClick: () => setLiked(l => !l), color: 'var(--burgundy)' },
-    { icon: 'comment', count: post.comments, active: false, onClick: () => {} },
+    { icon: 'heart', count: likeCount, active: liked, onClick: handleLike, color: 'var(--burgundy)' },
+    { icon: 'comment', count: commentCount, active: false, onClick: () => {} },
+    { icon: 'eye', count: views, active: false, onClick: () => {} },
     { icon: 'bookmark', count: undefined, active: saved, onClick: () => setSaved(s => !s), color: 'var(--tan-2)' },
     { icon: 'share', count: undefined, active: false, onClick: () => {} },
   ];
@@ -68,7 +90,20 @@ const PostActions: React.FC<{ post: Post; vertical?: boolean }> = ({ post, verti
 };
 
 // ── Comment row ───────────────────────────────────────────────────────────────
-const CommentRow: React.FC<{ comment: ApiComment }> = ({ comment }) => {
+const CommentRow: React.FC<{
+  comment: ApiComment;
+  currentUserId?: string;
+  onDeleted?: (id: string) => void;
+  onUpdated?: (id: string, content: string) => void;
+  depth?: number;
+}> = ({ comment, currentUserId, onDeleted, onUpdated, depth = 0 }) => {
+  const [editing, setEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.content);
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const isOwner = !!currentUserId && currentUserId === comment.author.id;
+
   const author: Author = {
     id: comment.author.id,
     name: comment.author.name,
@@ -77,20 +112,97 @@ const CommentRow: React.FC<{ comment: ApiComment }> = ({ comment }) => {
     dept: '',
     year: '',
   };
+
+  const handleSave = async () => {
+    if (!editText.trim() || editText.trim() === comment.content) { setEditing(false); return; }
+    setSaving(true);
+    try {
+      await commentsApi.update(comment.id, editText.trim());
+      onUpdated?.(comment.id, editText.trim());
+      setEditing(false);
+    } catch {
+      // stay in editing state so user can retry
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm('Delete this comment?')) return;
+    setDeleting(true);
+    try {
+      await commentsApi.delete(comment.id);
+      onDeleted?.(comment.id);
+    } catch {
+      setDeleting(false);
+    }
+  };
+
   return (
-    <div style={{ display: 'flex', gap: 12, padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
-      <Avatar user={author} size={36} />
-      <div style={{ flex: 1 }}>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
-          <span style={{ fontSize: 13, fontWeight: 600 }}>{comment.author.name}</span>
-          <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>· {relTime(comment.createdAt)}</span>
-        </div>
-        <p className="tr-serif" style={{ margin: 0, fontSize: 15, lineHeight: 1.55, color: 'var(--ink)' }}>{comment.content}</p>
-        <div style={{ display: 'flex', gap: 14, marginTop: 8, color: 'var(--ink-3)', fontSize: 11.5 }}>
-          <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>Reply</button>
-          <button style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', padding: 0, fontFamily: 'inherit' }}>Like</button>
+    <div style={{ marginLeft: depth > 0 ? 36 : 0 }}>
+      <div style={{ display: 'flex', gap: 12, padding: '14px 0', borderBottom: depth === 0 ? '1px solid var(--line)' : 'none' }}>
+        <Avatar user={author} size={36} />
+        <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 600 }}>{comment.author.name}</span>
+            <span style={{ fontSize: 11, color: 'var(--ink-3)' }}>· {relTime(comment.createdAt)}</span>
+            {isOwner && !editing && (
+              <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
+                <button
+                  onClick={() => { setEditText(comment.content); setEditing(true); }}
+                  style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer', padding: 0, fontSize: 11, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 3 }}
+                >
+                  <Icon name="edit" size={11} /> Edit
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  style={{ background: 'none', border: 'none', color: 'var(--burgundy)', cursor: 'pointer', padding: 0, fontSize: 11, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 3, opacity: deleting ? 0.5 : 1 }}
+                >
+                  <Icon name="trash" size={11} /> {deleting ? 'Deleting…' : 'Delete'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {editing ? (
+            <div>
+              <textarea
+                value={editText}
+                onChange={e => setEditText(e.target.value)}
+                style={{
+                  width: '100%', border: '1px solid var(--line)', borderRadius: 8,
+                  padding: '8px 10px', background: 'var(--paper)',
+                  fontFamily: "'Fraunces',serif", fontSize: 15, color: 'var(--ink)',
+                  minHeight: 60, resize: 'none', lineHeight: 1.5, outline: 'none',
+                }}
+              />
+              <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                <NeuButton small onClick={() => setEditing(false)}>Cancel</NeuButton>
+                <NeuButton small primary onClick={handleSave}>{saving ? 'Saving…' : 'Save'}</NeuButton>
+              </div>
+            </div>
+          ) : (
+            <p className="tr-serif" style={{ margin: 0, fontSize: 15, lineHeight: 1.55, color: 'var(--ink)' }}>{comment.content}</p>
+          )}
         </div>
       </div>
+
+      {/* Nested replies */}
+      {(comment.replies ?? []).length > 0 && (
+        <div style={{ borderLeft: '2px solid var(--line)', marginLeft: 18, paddingLeft: 2 }}>
+          {(comment.replies ?? []).map(reply => (
+            <CommentRow
+              key={reply.id}
+              comment={reply}
+              currentUserId={currentUserId}
+              onDeleted={onDeleted}
+              onUpdated={onUpdated}
+              depth={depth + 1}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -99,16 +211,18 @@ const CommentRow: React.FC<{ comment: ApiComment }> = ({ comment }) => {
 const CommentBox: React.FC<{ user: Author; postId: string; onPosted: () => void }> = ({ user, postId, onPosted }) => {
   const [text, setText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const submit = async () => {
     if (!text.trim()) return;
     setSubmitting(true);
+    setError('');
     try {
       await commentsApi.create(postId, text.trim());
       setText('');
       onPosted();
-    } catch {
-      // silent — user may not be authed as AUTHOR/ADMIN
+    } catch (e: any) {
+      setError(e?.response?.data?.message ?? 'Failed to post comment. Please try again.');
     } finally {
       setSubmitting(false);
     }
@@ -120,7 +234,7 @@ const CommentBox: React.FC<{ user: Author; postId: string; onPosted: () => void 
       <div style={{ flex: 1 }}>
         <textarea
           value={text}
-          onChange={e => setText(e.target.value)}
+          onChange={e => { setText(e.target.value); setError(''); }}
           placeholder="Share a thought on this essay…"
           style={{
             width: '100%', border: 'none', outline: 'none', background: 'transparent',
@@ -128,8 +242,11 @@ const CommentBox: React.FC<{ user: Author; postId: string; onPosted: () => void 
             minHeight: 50, resize: 'none', lineHeight: 1.5,
           }}
         />
+        {error && (
+          <div style={{ fontSize: 12, color: 'var(--burgundy)', marginBottom: 6 }}>{error}</div>
+        )}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 6 }}>
-          <NeuButton small onClick={() => setText('')}>Cancel</NeuButton>
+          <NeuButton small onClick={() => { setText(''); setError(''); }}>Cancel</NeuButton>
           <NeuButton small primary icon="arrow-right" onClick={submit}>
             {submitting ? 'Posting…' : 'Post'}
           </NeuButton>
@@ -142,6 +259,7 @@ const CommentBox: React.FC<{ user: Author; postId: string; onPosted: () => void 
 // ── Post Desktop ──────────────────────────────────────────────────────────────
 export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => void }> = ({ post, user, nav }) => {
   const [comments, setComments] = useState<ApiComment[]>([]);
+  const [views, setViews] = useState(post.views);
 
   const loadComments = () => {
     commentsApi.listForPost(post.id)
@@ -149,7 +267,25 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
       .catch(() => {});
   };
 
-  useEffect(() => { loadComments(); }, [post.id]);
+  useEffect(() => {
+    loadComments();
+    const key = `tr_viewed_${post.slug}`;
+    if (!localStorage.getItem(key)) {
+      postsApi.incrementView(post.slug)
+        .then(() => { localStorage.setItem(key, '1'); setViews(v => v + 1); })
+        .catch(() => {});
+    }
+  }, [post.id]);
+
+  const handleCommentDeleted = (id: string) => {
+    setComments(cs => cs.filter(c => c.id !== id));
+  };
+
+  const handleCommentUpdated = (id: string, content: string) => {
+    setComments(cs => cs.map(c => c.id === id ? { ...c, content } : c));
+  };
+
+  const commentCount = comments.length;
 
   return (
     <div style={{ padding: '28px 32px 60px', maxWidth: 900, margin: '0 auto' }}>
@@ -177,8 +313,11 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
           <Avatar user={post.author} size={42} ring />
           <div style={{ textAlign: 'left', lineHeight: 1.3 }}>
             <div style={{ fontSize: 14, fontWeight: 600 }}>{post.author.name}</div>
-            <div style={{ fontSize: 12, color: 'var(--ink-3)' }}>
+            <div style={{ fontSize: 12, color: 'var(--ink-3)', display: 'flex', gap: 6, alignItems: 'center' }}>
               {post.author.dept || post.author.year} · {formatDate(post.createdAt)} · {post.readTime} min read
+              <span style={{ display: 'inline-flex', gap: 3, alignItems: 'center' }}>
+                <Icon name="eye" size={11} stroke="var(--ink-3)" /> {views}
+              </span>
             </div>
           </div>
           <NeuButton small primary>Follow</NeuButton>
@@ -196,7 +335,7 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
 
       <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr', gap: 30 }}>
         <div style={{ position: 'sticky', top: 20, alignSelf: 'start' }}>
-          <PostActions post={post} vertical />
+          <PostActions post={post} commentCount={commentCount} views={views} vertical />
         </div>
         <article style={{ maxWidth: 680 }}>
           {(post.content.length > 0 ? post.content : [
@@ -224,10 +363,18 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
           </NeuCard>
 
           <h3 className="tr-serif" style={{ fontSize: 22, fontWeight: 500, margin: '40px 0 16px' }}>
-            {comments.length} {comments.length === 1 ? 'response' : 'responses'}
+            {commentCount} {commentCount === 1 ? 'response' : 'responses'}
           </h3>
           <CommentBox user={user} postId={post.id} onPosted={loadComments} />
-          {comments.map(c => <CommentRow key={c.id} comment={c} />)}
+          {comments.map(c => (
+            <CommentRow
+              key={c.id}
+              comment={c}
+              currentUserId={user.id}
+              onDeleted={handleCommentDeleted}
+              onUpdated={handleCommentUpdated}
+            />
+          ))}
         </article>
       </div>
     </div>
@@ -237,12 +384,31 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
 // ── Post Mobile ───────────────────────────────────────────────────────────────
 export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Author }> = ({ post, nav, user }) => {
   const [comments, setComments] = useState<ApiComment[]>([]);
+  const [views, setViews] = useState(post.views);
 
   const loadComments = () => {
     commentsApi.listForPost(post.id).then(setComments).catch(() => {});
   };
 
-  useEffect(() => { loadComments(); }, [post.id]);
+  useEffect(() => {
+    loadComments();
+    const key = `tr_viewed_${post.slug}`;
+    if (!localStorage.getItem(key)) {
+      postsApi.incrementView(post.slug)
+        .then(() => { localStorage.setItem(key, '1'); setViews(v => v + 1); })
+        .catch(() => {});
+    }
+  }, [post.id]);
+
+  const handleCommentDeleted = (id: string) => {
+    setComments(cs => cs.filter(c => c.id !== id));
+  };
+
+  const handleCommentUpdated = (id: string, content: string) => {
+    setComments(cs => cs.map(c => c.id === id ? { ...c, content } : c));
+  };
+
+  const commentCount = comments.length;
 
   return (
     <div style={{ padding: '14px 18px 90px' }}>
@@ -261,7 +427,12 @@ export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Au
         <Avatar user={post.author} size={32} ring />
         <div style={{ flex: 1, lineHeight: 1.25 }}>
           <div style={{ fontSize: 13, fontWeight: 600 }}>{post.author.name}</div>
-          <div style={{ fontSize: 11, color: 'var(--ink-3)' }}>{formatDate(post.createdAt)} · {post.readTime} min</div>
+          <div style={{ fontSize: 11, color: 'var(--ink-3)', display: 'flex', gap: 6, alignItems: 'center' }}>
+            {formatDate(post.createdAt)} · {post.readTime} min
+            <span style={{ display: 'inline-flex', gap: 3, alignItems: 'center' }}>
+              <Icon name="eye" size={10} stroke="var(--ink-3)" /> {views}
+            </span>
+          </div>
         </div>
       </div>
       <div style={{
@@ -282,15 +453,23 @@ export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Au
       {user && (
         <div style={{ marginTop: 24 }}>
           <h3 className="tr-serif" style={{ fontSize: 18, fontWeight: 500, margin: '0 0 12px' }}>
-            {comments.length} {comments.length === 1 ? 'response' : 'responses'}
+            {commentCount} {commentCount === 1 ? 'response' : 'responses'}
           </h3>
           <CommentBox user={user} postId={post.id} onPosted={loadComments} />
-          {comments.map(c => <CommentRow key={c.id} comment={c} />)}
+          {comments.map(c => (
+            <CommentRow
+              key={c.id}
+              comment={c}
+              currentUserId={user?.id}
+              onDeleted={handleCommentDeleted}
+              onUpdated={handleCommentUpdated}
+            />
+          ))}
         </div>
       )}
       <div style={{ position: 'sticky', bottom: 70, zIndex: 10, marginTop: 24 }}>
         <div className="neu" style={{ padding: 10, borderRadius: 999, display: 'flex', justifyContent: 'space-around' }}>
-          <PostActions post={post} />
+          <PostActions post={post} commentCount={commentCount} views={views} />
         </div>
       </div>
     </div>

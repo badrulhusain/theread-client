@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './the-read.css';
 
 import { Sidebar, TopBar, MobileHeader, MobileTabBar } from './components/Layout';
@@ -9,15 +9,25 @@ import { PostDesktop, PostMobile } from './screens/Post';
 import { WriteDesktop, WriteMobile } from './screens/Write';
 import { ProfileDesktop, ProfileMobile } from './screens/Profile';
 import { AuthProvider, useAuth } from './AuthContext';
+import { postsApi } from './api';
 import type { Post, RouteKey } from './types';
+
+const VALID_ROUTES: RouteKey[] = ['dashboard', 'feed', 'write', 'post', 'notifications', 'profile'];
 
 // ── Inner app (needs auth context) ────────────────────────────────────────────
 const AppInner: React.FC = () => {
   const { user, loading, logout } = useAuth();
-  const [route, setRoute] = useState<RouteKey>('dashboard');
+  const [route, setRoute] = useState<RouteKey>(() => {
+    const saved = sessionStorage.getItem('tr_route') as RouteKey | null;
+    return saved && VALID_ROUTES.includes(saved) ? saved : 'dashboard';
+  });
   const [currentPost, setCurrentPost] = useState<Post | null>(null);
+  const [editPost, setEditPost] = useState<Post | null>(null);
   const [authScreen, setAuthScreen] = useState<'login' | 'register'>('login');
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const savedPostSlug = useRef(
+    sessionStorage.getItem('tr_route') === 'post' ? sessionStorage.getItem('tr_post_slug') : null
+  );
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
@@ -25,9 +35,26 @@ const AppInner: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  // Restore post on refresh
+  useEffect(() => {
+    if (!loading && route === 'post' && !currentPost && savedPostSlug.current) {
+      postsApi.getBySlug(savedPostSlug.current)
+        .then(p => setCurrentPost(p))
+        .catch(() => { setRoute('feed'); sessionStorage.setItem('tr_route', 'feed'); });
+    }
+  }, [loading]);
+
   const go = (r: RouteKey, post?: Post) => {
     setRoute(r);
-    if (post) setCurrentPost(post);
+    sessionStorage.setItem('tr_route', r);
+    if (r === 'post' && post) {
+      setCurrentPost(post);
+      sessionStorage.setItem('tr_post_slug', post.slug);
+    } else if (r === 'write' && post) {
+      setEditPost(post);
+    } else if (r !== 'write') {
+      setEditPost(null);
+    }
   };
 
   if (loading) {
@@ -55,7 +82,7 @@ const AppInner: React.FC = () => {
           <div className="frame-scroll" style={{ flex: 1, minHeight: 0 }}>
             {route === 'dashboard' && <DashboardDesktop user={user!} nav={go} />}
             {route === 'feed' && <FeedDesktop nav={go} />}
-            {route === 'write' && <WriteDesktop user={user!} nav={go} />}
+            {route === 'write' && <WriteDesktop user={user!} nav={go} editPost={editPost ?? undefined} />}
             {route === 'post' && currentPost && <PostDesktop post={currentPost} user={user!} nav={go} />}
             {route === 'notifications' && (
               <div style={{ padding: '28px 32px' }}>
@@ -81,7 +108,7 @@ const AppInner: React.FC = () => {
         <div className="frame-scroll" style={{ flex: 1, minHeight: 0 }}>
           {route === 'dashboard' && <DashboardMobile user={user!} nav={go} />}
           {route === 'feed' && <FeedMobile nav={go} />}
-          {route === 'write' && <WriteMobile user={user!} nav={go} />}
+          {route === 'write' && <WriteMobile user={user!} nav={go} editPost={editPost ?? undefined} />}
           {route === 'post' && currentPost && <PostMobile post={currentPost} nav={go} user={user!} />}
           {route === 'notifications' && (
             <div style={{ padding: '14px 16px 90px' }}>
