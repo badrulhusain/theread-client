@@ -312,7 +312,7 @@ export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void; editP
 };
 
 // ── Write Mobile ──────────────────────────────────────────────────────────────
-export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void; editPost?: Post }> = ({ user: _user, nav, editPost }) => {
+export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void; editPost?: Post }> = ({ nav, editPost }) => {
   const [title, setTitle] = useState(editPost?.title ?? '');
   const [excerpt, setExcerpt] = useState(editPost?.excerpt ?? '');
   const [body, setBody] = useState(editPost?.rawContent ?? '');

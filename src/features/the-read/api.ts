@@ -89,7 +89,6 @@ function readTimeFrom(content: string): number {
 }
 
 // ── Mappers ────────────────────────────────────────────────────────────────────
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapUser(u: any): Author {
   const name = u.name ?? u.email?.split('@')[0] ?? 'Unknown';
   return {
@@ -102,13 +101,11 @@ export function mapUser(u: any): Author {
   };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapTag(t: any): Tag {
   const name = t.name ?? '';
   return { id: t.id, name, hue: tagHue(name) };
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function mapPost(p: any): Post {
   const rawTags: Tag[] = (p.tags ?? []).map((pt: any) => mapTag(pt.tag ?? pt));
   const cover = p.coverImage && p.coverImage.startsWith('linear-gradient')
