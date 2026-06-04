@@ -25,6 +25,7 @@ export default function MyBlogsPage() {
         setBlogs(result.items);
         setTotalPages(result.totalPages);
       })
+      .catch((error) => toast.error(apiMessage(error, 'Could not load your blogs.')))
       .finally(() => setLoading(false));
   }
 
@@ -43,7 +44,7 @@ export default function MyBlogsPage() {
     }
   }
 
-  if (loading) return <p className="text-slate-500">Loading your blogs...</p>;
+  if (loading) return <p className="text-[#74685f]">Loading your blogs...</p>;
 
   return (
     <div className="space-y-4">
@@ -53,7 +54,7 @@ export default function MyBlogsPage() {
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2"><h3 className="line-clamp-1 font-semibold">{blog.title}</h3><StatusBadge status={blog.status} /></div>
-              <p className="mt-1 line-clamp-2 text-sm text-slate-500">{blog.excerpt || 'No excerpt.'}</p>
+              <p className="mt-1 line-clamp-2 text-sm text-[#74685f]">{blog.excerpt || 'No excerpt.'}</p>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               {canEdit(blog.status) && <Button asChild variant="outline" size="sm"><Link to={`/my-blogs/${blog.id}/edit`}>Edit</Link></Button>}
@@ -62,7 +63,7 @@ export default function MyBlogsPage() {
             </div>
           </CardContent>
         </Card>
-      )) : <Card><CardContent className="text-slate-500">No blogs yet. Start with a draft.</CardContent></Card>}
+      )) : <Card><CardContent className="text-[#74685f]">No blogs yet. Start with a draft.</CardContent></Card>}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );

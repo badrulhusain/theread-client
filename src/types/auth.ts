@@ -5,6 +5,8 @@ export interface AuthUser {
   name: string;
   email: string;
   role: UserRole;
+  avatarUrl?: string | null;
+  avatarPublicId?: string | null;
   isBlocked?: boolean;
   status?: 'ACTIVE' | 'BLOCKED' | string;
 }

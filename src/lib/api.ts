@@ -3,7 +3,8 @@ import type { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import type { ApiErrorBody, PaginatedResponse } from '@/types/api';
 
-const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const rawBaseURL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+const baseURL = rawBaseURL.endsWith('/api') ? rawBaseURL : `${rawBaseURL}/api`;
 
 export const TOKEN_STORAGE_KEY = 'the_read_access_token';
 
@@ -43,9 +44,15 @@ api.interceptors.response.use(
 
 export function apiMessage(error: unknown, fallback = 'Something went wrong. Please try again.') {
   const axiosError = error as AxiosError<ApiErrorBody>;
+  if (axiosError.code === 'ERR_NETWORK') return 'Backend is offline or unreachable. Please try again later.';
+  if (axiosError.code === 'ECONNABORTED') return 'The request timed out. Please try again.';
   const message = axiosError.response?.data?.message;
   if (Array.isArray(message)) return message.join(', ');
-  return message || axiosError.response?.data?.error || axiosError.message || fallback;
+  if (message) return message;
+  if (axiosError.response?.status === 403) return axiosError.response.data?.error || 'You are not allowed to perform this action.';
+  if (axiosError.response?.status === 404) return axiosError.response.data?.error || 'Requested item was not found.';
+  if (axiosError.response?.status === 409) return axiosError.response.data?.error || 'This item changed or is no longer available.';
+  return axiosError.response?.data?.error || axiosError.message || fallback;
 }
 
 export function showApiError(error: unknown, fallback?: string) {
@@ -53,12 +60,22 @@ export function showApiError(error: unknown, fallback?: string) {
 }
 
 export function unwrapList<T>(payload: T[] | PaginatedResponse<T>) {
-  if (Array.isArray(payload)) {
-    return { items: payload, total: payload.length, totalPages: 1 };
+  const data = (payload as { data?: unknown })?.data;
+  const source = data && !Array.isArray(payload) && !Array.isArray(data)
+    ? (payload as { data: T[] | PaginatedResponse<T> }).data
+    : payload;
+  if (Array.isArray(source)) {
+    return { items: source, total: source.length, totalPages: 1 };
   }
   return {
-    items: payload.data ?? [],
-    total: payload.meta?.total ?? payload.total ?? payload.data?.length ?? 0,
-    totalPages: payload.meta?.totalPages ?? payload.totalPages ?? 1,
+    items: source.data ?? [],
+    total: source.meta?.total ?? source.total ?? source.data?.length ?? 0,
+    totalPages: source.meta?.totalPages ?? source.totalPages ?? 1,
   };
+}
+
+export function unwrapData<T>(payload: T | { data?: T; blog?: T; post?: T; item?: T; user?: T }) {
+  const wrapper = payload as { data?: T | { blog?: T; post?: T; item?: T; user?: T }; blog?: T; post?: T; item?: T; user?: T };
+  const nested = wrapper.data as { blog?: T; post?: T; item?: T; user?: T } | undefined;
+  return (nested?.blog ?? nested?.post ?? nested?.item ?? nested?.user ?? wrapper.data ?? wrapper.blog ?? wrapper.post ?? wrapper.item ?? wrapper.user ?? payload) as T;
 }

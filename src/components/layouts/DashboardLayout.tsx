@@ -10,11 +10,12 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ title, subtitle, nav }: DashboardLayoutProps) {
   return (
-    <main className="mx-auto grid max-w-7xl gap-6 px-4 py-6 lg:grid-cols-[240px_1fr]">
-      <aside className="rounded-lg border border-slate-200 bg-white p-3">
+    <main className="grid min-h-[calc(100vh-65px)] gap-0 pb-24 md:min-h-[calc(100vh-105px)] md:pb-0 lg:grid-cols-[252px_1fr]">
+      <aside className="border-b border-[#ded3c4] bg-[#eee6da] p-3 lg:border-b-0 lg:border-r">
         <div className="px-2 py-3">
-          <h1 className="text-lg font-semibold">{title}</h1>
-          {subtitle && <p className="mt-1 text-sm text-slate-500">{subtitle}</p>}
+          <p className="text-[10px] font-semibold uppercase tracking-[0.26em] text-[#a9793d]">The Read</p>
+          <h1 className="mt-1 font-serif text-2xl font-semibold tracking-tight text-[#231b17]">{title}</h1>
+          {subtitle && <p className="mt-1 text-sm leading-6 text-[#74685f]">{subtitle}</p>}
         </div>
         <nav className="mt-2 flex gap-1 overflow-x-auto lg:flex-col">
           {nav.map((item) => (
@@ -23,8 +24,8 @@ export function DashboardLayout({ title, subtitle, nav }: DashboardLayoutProps) 
               to={item.to}
               end={item.to === '/dashboard' || item.to === '/editor' || item.to === '/admin'}
               className={({ isActive }) => cn(
-                'inline-flex shrink-0 items-center gap-2 rounded-md px-3 py-2 text-sm font-medium',
-                isActive ? 'bg-slate-900 text-white' : 'text-slate-600 hover:bg-slate-100 hover:text-slate-950',
+                'inline-flex shrink-0 items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold transition-colors',
+                isActive ? 'bg-[#fbf7ef] text-[#7b2d32] shadow-[inset_3px_3px_8px_rgba(98,69,39,0.12),inset_-3px_-3px_8px_rgba(255,252,243,0.85)]' : 'text-[#5c4b3d] hover:bg-[#f4efe6] hover:text-[#231b17]',
               )}
             >
               {item.icon}
@@ -33,7 +34,7 @@ export function DashboardLayout({ title, subtitle, nav }: DashboardLayoutProps) 
           ))}
         </nav>
       </aside>
-      <section className="min-w-0">
+      <section className="min-w-0 bg-[#f4efe6]">
         <Outlet />
       </section>
     </main>

@@ -12,8 +12,17 @@ export interface User {
 
 export interface AdminStats {
   totalUsers?: number;
+  users?: number;
+  totalAuthors?: number;
+  authors?: number;
   totalEditors?: number;
+  editors?: number;
+  totalAdmins?: number;
+  admins?: number;
+  totalBlogs?: number;
   submittedBlogs?: number;
+  underReviewBlogs?: number;
   approvedBlogs?: number;
   publishedBlogs?: number;
+  rejectedBlogs?: number;
 }

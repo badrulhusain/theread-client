@@ -1,10 +1,24 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/badge';
+import { apiMessage } from '@/lib/api';
 import { blogService } from '@/services/blog.service';
-import type { Blog } from '@/types/blog';
+import type { Blog, BlogStatus } from '@/types/blog';
+
+const statusMessages: Record<BlogStatus, string> = {
+  DRAFT: 'You can edit and submit.',
+  SUBMITTED: 'Waiting for editor.',
+  UNDER_REVIEW: 'Editor is reviewing.',
+  REVISION_REQUESTED: 'Revision requested. Please edit and resubmit.',
+  APPROVED: 'Approved. Waiting for admin publish.',
+  REJECTED: 'Rejected.',
+  PUBLISHED: 'Published.',
+  UNPUBLISHED: 'Unpublished.',
+  ARCHIVED: 'Archived.',
+};
 
 export default function BlogStatusPage() {
   const { id = '' } = useParams();
@@ -12,11 +26,14 @@ export default function BlogStatusPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    blogService.getMine(id).then(setBlog).finally(() => setLoading(false));
+    blogService.getMine(id)
+      .then(setBlog)
+      .catch((error) => toast.error(apiMessage(error, 'Could not load blog status.')))
+      .finally(() => setLoading(false));
   }, [id]);
 
-  if (loading) return <p className="text-slate-500">Loading blog status...</p>;
-  if (!blog) return <Card><CardContent className="text-slate-500">Blog not found.</CardContent></Card>;
+  if (loading) return <p className="text-[#74685f]">Loading blog status...</p>;
+  if (!blog) return <Card><CardContent className="text-[#74685f]">Blog not found.</CardContent></Card>;
   const editable = blog.status === 'DRAFT' || blog.status === 'REVISION_REQUESTED';
 
   return (
@@ -26,13 +43,14 @@ export default function BlogStatusPage() {
         {editable && <Button asChild><Link to={`/my-blogs/${blog.id}/edit`}>Edit blog</Link></Button>}
       </CardHeader>
       <CardContent className="space-y-6">
-        <p className="text-slate-600">{blog.excerpt}</p>
+        <div className="rounded-xl bg-[#eee6da] p-3 text-sm font-medium text-[#5c4b3d]">{statusMessages[blog.status]}</div>
+        <p className="text-[#5c4b3d]">{blog.excerpt}</p>
         <section><h3 className="font-semibold">Editor comments</h3>
           {blog.reviewComments?.length ? (
-            <div className="mt-3 space-y-3">{blog.reviewComments.map((comment) => <div key={comment.id} className="rounded-md bg-slate-50 p-3 text-sm text-slate-700">{comment.comment}</div>)}</div>
-          ) : <p className="mt-2 text-sm text-slate-500">No editor comments yet.</p>}
+            <div className="mt-3 space-y-3">{blog.reviewComments.map((comment) => <div key={comment.id} className="rounded-xl bg-[#eee6da] p-3 text-sm text-[#5c4b3d]">{comment.comment}</div>)}</div>
+          ) : <p className="mt-2 text-sm text-[#74685f]">No editor comments yet.</p>}
         </section>
-        <section><h3 className="font-semibold">Content snapshot</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-slate-700">{blog.content}</p></section>
+        <section><h3 className="font-semibold">Content snapshot</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#5c4b3d]">{blog.content}</p></section>
       </CardContent>
     </Card>
   );

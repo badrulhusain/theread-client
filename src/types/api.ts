@@ -23,4 +23,8 @@ export interface QueryParams {
   limit?: number;
   search?: string;
   status?: string;
+  category?: string;
+  categoryId?: string;
+  tag?: string;
+  tagId?: string;
 }

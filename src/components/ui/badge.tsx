@@ -1,23 +1,25 @@
 import type { HTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
+import { normalizeBlogStatus } from '@/lib/blog-status';
 import type { BlogStatus } from '@/types/blog';
 
 const statusClasses: Record<BlogStatus, string> = {
-  DRAFT: 'bg-slate-100 text-slate-700',
-  SUBMITTED: 'bg-blue-100 text-blue-700',
-  UNDER_REVIEW: 'bg-yellow-100 text-yellow-800',
-  REVISION_REQUESTED: 'bg-orange-100 text-orange-700',
-  APPROVED: 'bg-green-100 text-green-700',
-  REJECTED: 'bg-red-100 text-red-700',
-  PUBLISHED: 'bg-emerald-100 text-emerald-700',
-  UNPUBLISHED: 'bg-slate-200 text-slate-700',
-  ARCHIVED: 'bg-zinc-800 text-white',
+  DRAFT: 'bg-[#eee6da] text-[#74685f]',
+  SUBMITTED: 'bg-[#efe3cd] text-[#8a5a3c]',
+  UNDER_REVIEW: 'bg-[#f1e6c9] text-[#8a5a3c]',
+  REVISION_REQUESTED: 'bg-[#ead6c7] text-[#7b2d32]',
+  APPROVED: 'bg-[#e3ead6] text-[#53693a]',
+  REJECTED: 'bg-[#ead6d6] text-[#7b2d32]',
+  PUBLISHED: 'bg-[#dde8d3] text-[#53693a]',
+  UNPUBLISHED: 'bg-[#eee6da] text-[#74685f]',
+  ARCHIVED: 'bg-[#231b17] text-[#fffaf1]',
 };
 
 export function Badge({ className, ...props }: HTMLAttributes<HTMLSpanElement>) {
-  return <span className={cn('inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium', className)} {...props} />;
+  return <span className={cn('inline-flex items-center rounded-full border border-black/5 px-2.5 py-1 text-xs font-semibold tracking-wide', className)} {...props} />;
 }
 
-export function StatusBadge({ status }: { status: BlogStatus }) {
-  return <Badge className={statusClasses[status] ?? 'bg-slate-100 text-slate-700'}>{status.replaceAll('_', ' ')}</Badge>;
+export function StatusBadge({ status }: { status: BlogStatus | string }) {
+  const normalized = normalizeBlogStatus(status);
+  return <Badge className={statusClasses[normalized] ?? 'bg-[#eee6da] text-[#74685f]'}>{normalized.replaceAll('_', ' ')}</Badge>;
 }

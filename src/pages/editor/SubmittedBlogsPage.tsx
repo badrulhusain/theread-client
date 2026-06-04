@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { editorialService } from '@/services/editorial.service';
 import type { Blog } from '@/types/blog';
 
 export default function SubmittedBlogsPage() {
+  const navigate = useNavigate();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -23,6 +24,7 @@ export default function SubmittedBlogsPage() {
         setBlogs(result.items);
         setTotalPages(result.totalPages);
       })
+      .catch((error) => toast.error(apiMessage(error, 'Could not load submissions.')))
       .finally(() => setLoading(false));
   }
 
@@ -31,17 +33,17 @@ export default function SubmittedBlogsPage() {
   async function pick(id: string) {
     setPicking(id);
     try {
-      await editorialService.pick(id);
+      const blog = await editorialService.pick(id);
       toast.success('Blog picked for review.');
-      load();
+      navigate(`/editor/blogs/${blog.id ?? id}/review`);
     } catch (error) {
-      toast.error(apiMessage(error, 'Someone else may have picked this blog already.'));
+      toast.error(apiMessage(error, 'Already picked or not available.'));
     } finally {
       setPicking('');
     }
   }
 
-  if (loading) return <p className="text-slate-500">Loading submissions...</p>;
+  if (loading) return <p className="text-[#74685f]">Loading submissions...</p>;
 
   return (
     <div className="space-y-4">
@@ -49,14 +51,14 @@ export default function SubmittedBlogsPage() {
       {blogs.length ? blogs.map((blog) => (
         <Card key={blog.id}>
           <CardContent className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{blog.title}</h3><StatusBadge status={blog.status} /></div><p className="mt-1 text-sm text-slate-500">{blog.author?.name ?? 'Unknown author'}</p></div>
+            <div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold">{blog.title}</h3><StatusBadge status={blog.status} /></div><p className="mt-1 text-sm text-[#74685f]">{blog.author?.name ?? 'Unknown author'}</p></div>
             <div className="flex flex-wrap gap-2">
               <Button size="sm" disabled={picking === blog.id} onClick={() => void pick(blog.id)}>{picking === blog.id ? 'Picking...' : 'Pick for review'}</Button>
               <Button asChild size="sm" variant="outline"><Link to={`/editor/blogs/${blog.id}/review`}>Open</Link></Button>
             </div>
           </CardContent>
         </Card>
-      )) : <Card><CardContent className="text-slate-500">No submitted blogs are waiting.</CardContent></Card>}
+      )) : <Card><CardContent className="text-[#74685f]">No submitted blogs are waiting.</CardContent></Card>}
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
     </div>
   );

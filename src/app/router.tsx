@@ -15,6 +15,7 @@ const DashboardPage = lazy(() => import('@/pages/user/DashboardPage'));
 const BlogFormPage = lazy(() => import('@/pages/user/BlogFormPage'));
 const MyBlogsPage = lazy(() => import('@/pages/user/MyBlogsPage'));
 const BlogStatusPage = lazy(() => import('@/pages/user/BlogStatusPage'));
+const ProfilePage = lazy(() => import('@/pages/user/ProfilePage'));
 const EditorLayout = lazy(() => import('@/pages/editor/EditorLayout'));
 const EditorDashboardPage = lazy(() => import('@/pages/editor/EditorDashboardPage'));
 const SubmittedBlogsPage = lazy(() => import('@/pages/editor/SubmittedBlogsPage'));
@@ -25,6 +26,9 @@ const AdminDashboardPage = lazy(() => import('@/pages/admin/AdminDashboardPage')
 const ManageUsersPage = lazy(() => import('@/pages/admin/ManageUsersPage'));
 const CreateStaffPage = lazy(() => import('@/pages/admin/CreateStaffPage'));
 const ManageBlogsPage = lazy(() => import('@/pages/admin/ManageBlogsPage'));
+const CategoriesPage = lazy(() => import('@/pages/admin/CategoriesPage'));
+const TagsPage = lazy(() => import('@/pages/admin/TagsPage'));
+const CommentsPage = lazy(() => import('@/pages/admin/CommentsPage'));
 
 function Root() {
   return (
@@ -57,6 +61,7 @@ export const router = createBrowserRouter([
               { path: 'my-blogs', element: <MyBlogsPage /> },
               { path: 'my-blogs/:id', element: <BlogStatusPage /> },
               { path: 'my-blogs/:id/edit', element: <BlogFormPage /> },
+              { path: 'profile', element: <ProfilePage /> },
             ],
           },
         ],
@@ -84,6 +89,9 @@ export const router = createBrowserRouter([
               { path: 'admin', element: <AdminDashboardPage /> },
               { path: 'admin/users', element: <ManageUsersPage /> },
               { path: 'admin/blogs', element: <ManageBlogsPage /> },
+              { path: 'admin/categories', element: <CategoriesPage /> },
+              { path: 'admin/tags', element: <TagsPage /> },
+              { path: 'admin/comments', element: <CommentsPage /> },
               { path: 'admin/editors/create', element: <CreateStaffPage /> },
               { path: 'admin/admins/create', element: <CreateStaffPage /> },
             ],

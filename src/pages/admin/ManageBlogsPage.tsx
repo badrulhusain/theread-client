@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { Eye, Pencil, Send, Trash2, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,6 +9,7 @@ import { Select } from '@/components/ui/select';
 import { Pagination } from '@/components/ui/pagination';
 import { StatusBadge } from '@/components/ui/badge';
 import { Table } from '@/components/ui/table';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { apiMessage } from '@/lib/api';
 import { adminService } from '@/services/admin.service';
 import type { Blog, BlogStatus } from '@/types/blog';
@@ -14,12 +17,15 @@ import type { Blog, BlogStatus } from '@/types/blog';
 const statuses: Array<'' | BlogStatus> = ['', 'DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'REVISION_REQUESTED', 'APPROVED', 'REJECTED', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'];
 
 export default function ManageBlogsPage() {
+  const [searchParams] = useSearchParams();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [search, setSearch] = useState('');
   const [debounced, setDebounced] = useState('');
-  const [status, setStatus] = useState('');
+  const [status, setStatus] = useState(searchParams.get('status') ?? '');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [processing, setProcessing] = useState<Set<string>>(new Set());
+  const [deleteTarget, setDeleteTarget] = useState<Blog | null>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -33,30 +39,54 @@ export default function ManageBlogsPage() {
     adminService.blogs({ page, limit: 10, search: debounced, ...(status && { status }) }).then((result) => {
       setBlogs(result.items);
       setTotalPages(result.totalPages);
-    });
+    }).catch(() => {});
   }
 
   useEffect(load, [debounced, page, status]);
 
   async function publish(blog: Blog) {
     if (blog.status !== 'APPROVED') return toast.error('Only approved blogs can be published.');
+    if (processing.has(blog.id)) return;
+    setProcessing((prev) => new Set(prev).add(blog.id));
     try {
       await adminService.publishBlog(blog.id);
       toast.success('Blog published.');
       load();
     } catch (error) {
       toast.error(apiMessage(error, 'Could not publish blog.'));
+    } finally {
+      setProcessing((prev) => { const next = new Set(prev); next.delete(blog.id); return next; });
     }
   }
 
   async function unpublish(blog: Blog) {
     if (blog.status !== 'PUBLISHED') return toast.error('Only published blogs can be unpublished.');
+    if (processing.has(blog.id)) return;
+    setProcessing((prev) => new Set(prev).add(blog.id));
     try {
       await adminService.unpublishBlog(blog.id);
       toast.success('Blog unpublished.');
       load();
     } catch (error) {
       toast.error(apiMessage(error, 'Could not unpublish blog.'));
+    } finally {
+      setProcessing((prev) => { const next = new Set(prev); next.delete(blog.id); return next; });
+    }
+  }
+
+  async function deleteBlog() {
+    if (!deleteTarget || processing.has(deleteTarget.id)) return;
+    const target = deleteTarget;
+    setProcessing((prev) => new Set(prev).add(target.id));
+    try {
+      await adminService.deleteBlog(target.id);
+      toast.success('Blog deleted.');
+      setDeleteTarget(null);
+      load();
+    } catch (error) {
+      toast.error(apiMessage(error, 'Could not delete blog.'));
+    } finally {
+      setProcessing((prev) => { const next = new Set(prev); next.delete(target.id); return next; });
     }
   }
 
@@ -75,13 +105,39 @@ export default function ManageBlogsPage() {
         <CardContent>
           {blogs.length ? (
             <Table>
-              <thead><tr className="border-b text-slate-500"><th className="py-2">Title</th><th>Author</th><th>Status</th><th>Actions</th></tr></thead>
-              <tbody>{blogs.map((blog) => <tr key={blog.id} className="border-b last:border-0"><td className="max-w-[280px] py-3 font-medium"><span className="line-clamp-1">{blog.title}</span></td><td>{blog.author?.name ?? 'Unknown'}</td><td><StatusBadge status={blog.status} /></td><td className="flex flex-wrap gap-2 py-2"><Button size="sm" disabled={blog.status !== 'APPROVED'} onClick={() => void publish(blog)}>Publish</Button><Button size="sm" variant="outline" disabled={blog.status !== 'PUBLISHED'} onClick={() => void unpublish(blog)}>Unpublish</Button></td></tr>)}</tbody>
+              <thead><tr className="border-b text-[#74685f]"><th className="py-2">Title</th><th>Author</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody>{blogs.map((blog) => (
+                <tr key={blog.id} className="border-b last:border-0">
+                  <td className="max-w-[280px] py-3 font-medium"><span className="line-clamp-1">{blog.title}</span></td>
+                  <td>{blog.author?.name ?? 'Unknown'}</td>
+                  <td><StatusBadge status={blog.status} /></td>
+                  <td className="py-2">
+                    <div className="flex flex-wrap gap-2">
+                      <Button asChild size="sm" variant="outline"><Link to={`/editor/blogs/${blog.id}/review`}><Eye className="h-4 w-4" /> View</Link></Button>
+                      <Button asChild size="sm" variant="outline"><Link to={`/editor/blogs/${blog.id}/edit`}><Pencil className="h-4 w-4" /> Edit</Link></Button>
+                      {blog.status === 'PUBLISHED' ? (
+                        <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void unpublish(blog)}><Undo2 className="h-4 w-4" /> Unpublish</Button>
+                      ) : (
+                        <Button size="sm" disabled={blog.status !== 'APPROVED' || processing.has(blog.id)} onClick={() => void publish(blog)}><Send className="h-4 w-4" /> Publish</Button>
+                      )}
+                      <Button size="sm" variant="destructive" disabled={processing.has(blog.id)} onClick={() => setDeleteTarget(blog)}><Trash2 className="h-4 w-4" /> Delete</Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}</tbody>
             </Table>
-          ) : <p className="text-slate-500">No blogs found.</p>}
+          ) : <p className="text-[#74685f]">No blogs found.</p>}
         </CardContent>
       </Card>
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="Delete blog"
+        message={`Delete "${deleteTarget?.title ?? 'this blog'}"? This cannot be undone.`}
+        confirmLabel={deleteTarget && processing.has(deleteTarget.id) ? 'Deleting...' : 'Delete'}
+        onConfirm={() => void deleteBlog()}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

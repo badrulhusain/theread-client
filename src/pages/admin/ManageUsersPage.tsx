@@ -50,13 +50,13 @@ export default function ManageUsersPage() {
         <CardContent>
           {users.length ? (
             <Table>
-              <thead><tr className="border-b text-slate-500"><th className="py-2">Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
+              <thead><tr className="border-b text-[#74685f]"><th className="py-2">Name</th><th>Email</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>{users.map((user) => {
                 const blocked = user.isBlocked || user.status === 'BLOCKED';
                 return <tr key={user.id} className="border-b last:border-0"><td className="py-3 font-medium">{user.name}</td><td>{user.email}</td><td>{user.role}</td><td>{blocked ? 'Blocked' : 'Active'}</td><td className="flex flex-wrap gap-2 py-2"><Button size="sm" variant="outline" disabled={user.role === 'AUTHOR'} onClick={() => void action('Promoted to author.', () => adminService.promoteToAuthor(user.id))}>Promote</Button>{blocked ? <Button size="sm" onClick={() => void action('User unblocked.', () => adminService.unblockUser(user.id))}>Unblock</Button> : <Button size="sm" variant="destructive" onClick={() => void action('User blocked.', () => adminService.blockUser(user.id))}>Block</Button>}</td></tr>;
               })}</tbody>
             </Table>
-          ) : <p className="text-slate-500">No users found.</p>}
+          ) : <p className="text-[#74685f]">No users found.</p>}
         </CardContent>
       </Card>
       <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
