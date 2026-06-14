@@ -8,9 +8,8 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { RichTextEditor } from '@/components/editor/RichTextEditor';
-import { ImageUpload } from '@/components/uploads/ImageUpload';
 import { apiMessage } from '@/lib/api';
-import { isValidOptionalUrl, readingTime, stripHtml, wordCount } from '@/lib/blog-content';
+import { readingTime, sanitizeHtml, stripHtml, wordCount } from '@/lib/blog-content';
 import { blogService, taxonomyService } from '@/services/blog.service';
 import type { Blog, BlogCategory, BlogFormPayload, BlogTag } from '@/types/blog';
 
@@ -20,8 +19,6 @@ const emptyForm: BlogFormPayload = {
   title: '',
   excerpt: '',
   content: '',
-  coverImage: '',
-  coverImagePublicId: '',
   seoTitle: '',
   seoDescription: '',
   categoryId: '',
@@ -37,7 +34,6 @@ export default function BlogFormPage() {
   const [tags, setTags] = useState<BlogTag[]>([]);
   const [loading, setLoading] = useState(!!id);
   const [submitting, setSubmitting] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
   const [preview, setPreview] = useState(false);
   const [dirty, setDirty] = useState(false);
 
@@ -103,11 +99,9 @@ export default function BlogFormPage() {
   function validate() {
     if (!form.title.trim()) return 'Title is required.';
     if (!stripHtml(form.content).trim()) return 'Content is required.';
-    if (uploadingCover) return 'Wait for the cover image upload to finish.';
     if ((form.tagIds?.length ?? 0) > 5) return 'Select up to 5 tags.';
     if ((form.seoTitle?.length ?? 0) > 70) return 'SEO title must be 70 characters or less.';
     if ((form.seoDescription?.length ?? 0) > 160) return 'SEO description must be 160 characters or less.';
-    if (!isValidOptionalUrl(form.coverImage)) return 'Cover image must be a valid http or https URL.';
     return '';
   }
 
@@ -170,21 +164,6 @@ export default function BlogFormPage() {
             <Input value={form.seoTitle ?? ''} onChange={(e) => update({ seoTitle: e.target.value })} placeholder="SEO title (max 70)" maxLength={70} />
             <Input value={form.seoDescription ?? ''} onChange={(e) => update({ seoDescription: e.target.value })} placeholder="SEO description (max 160)" maxLength={160} />
           </div>
-          <div className="space-y-3 rounded-xl border border-[#ded3c4] bg-[#f4efe6] p-4">
-            <ImageUpload
-              type="BLOG_COVER"
-              label="Cover image"
-              value={form.coverImage}
-              publicId={form.coverImagePublicId}
-              disabled={submitting}
-              onUploadingChange={setUploadingCover}
-              onChange={(image) => update({ coverImage: image?.url ?? '', coverImagePublicId: image?.publicId ?? '' })}
-            />
-            <details className="text-sm text-[#74685f]">
-              <summary className="cursor-pointer font-semibold text-[#5c4b3d]">Advanced: paste image URL</summary>
-              <Input className="mt-2" value={form.coverImage ?? ''} onChange={(e) => update({ coverImage: e.target.value, coverImagePublicId: '' })} placeholder="https://example.com/cover.webp" />
-            </details>
-          </div>
           {tags.length > 0 && (
             <div className="space-y-2">
               <p className="text-sm font-semibold text-[#5c4b3d]">Tags</p>
@@ -206,15 +185,15 @@ export default function BlogFormPage() {
             </div>
           )}
           {preview ? (
-            <article className="prose-read min-h-[340px] rounded-xl border border-[#ded3c4] bg-[#fffaf1] p-5" dangerouslySetInnerHTML={{ __html: form.content || '<p></p>' }} />
+            <article className="prose-read min-h-[340px] rounded-xl border border-[#ded3c4] bg-[#fffaf1] p-5" dangerouslySetInnerHTML={{ __html: sanitizeHtml(form.content || '<p></p>') }} />
           ) : (
             <RichTextEditor value={form.content} onChange={(content) => update({ content })} />
           )}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="text-xs font-medium text-[#74685f]">{wordCount(form.content)} words · {readingTime(form.content)}</div>
             <div className="flex flex-wrap gap-2">
-              <Button type="submit" disabled={submitting || uploadingCover}>{submitting ? 'Saving...' : 'Save draft'}</Button>
-              <Button type="button" variant="outline" disabled={submitting || uploadingCover} onClick={() => void save(true)}>{submitting ? 'Submitting...' : 'Submit for review'}</Button>
+              <Button type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save draft'}</Button>
+              <Button type="button" variant="outline" disabled={submitting} onClick={() => void save(true)}>{submitting ? 'Submitting...' : 'Submit for review'}</Button>
               {id && <Button asChild type="button" variant="ghost"><Link to={`/my-blogs/${id}`}>Cancel</Link></Button>}
             </div>
           </div>
@@ -229,8 +208,6 @@ function formFromBlog(blog: Blog): BlogFormPayload {
     title: blog.title,
     excerpt: blog.excerpt ?? '',
     content: blog.content ?? '',
-    coverImage: blog.coverImage ?? '',
-    coverImagePublicId: blog.coverImagePublicId ?? '',
     seoTitle: blog.seoTitle ?? '',
     seoDescription: blog.seoDescription ?? '',
     categoryId: blog.categoryId ?? (typeof blog.category === 'object' && blog.category ? blog.category.id : ''),
@@ -244,8 +221,6 @@ function buildPayload(form: BlogFormPayload): BlogFormPayload {
     title: form.title.trim(),
     excerpt: form.excerpt?.trim(),
     content: form.content,
-    coverImage: form.coverImage?.trim() || null,
-    coverImagePublicId: form.coverImagePublicId?.trim() || null,
     seoTitle: form.seoTitle?.trim(),
     seoDescription: form.seoDescription?.trim(),
     categoryId: form.categoryId || null,

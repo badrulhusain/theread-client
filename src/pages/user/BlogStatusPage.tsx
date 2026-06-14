@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/badge';
 import { apiMessage } from '@/lib/api';
+import { sanitizeHtml } from '@/lib/blog-content';
 import { blogService } from '@/services/blog.service';
 import type { Blog, BlogStatus } from '@/types/blog';
 
@@ -50,7 +51,7 @@ export default function BlogStatusPage() {
             <div className="mt-3 space-y-3">{blog.reviewComments.map((comment) => <div key={comment.id} className="rounded-xl bg-[#eee6da] p-3 text-sm text-[#5c4b3d]">{comment.comment}</div>)}</div>
           ) : <p className="mt-2 text-sm text-[#74685f]">No editor comments yet.</p>}
         </section>
-        <section><h3 className="font-semibold">Content snapshot</h3><p className="mt-2 whitespace-pre-wrap text-sm leading-7 text-[#5c4b3d]">{blog.content}</p></section>
+        <section><h3 className="font-semibold">Content snapshot</h3><div className="prose-read mt-2 text-sm leading-7 text-[#5c4b3d]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.content ?? '') }} /></section>
       </CardContent>
     </Card>
   );

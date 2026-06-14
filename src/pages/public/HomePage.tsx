@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { formatDate } from '@/components/blog/BlogCard';
-import { excerptFromContent, readingTime } from '@/lib/blog-content';
+import { coverImageAlt, coverImageUrl, excerptFromContent, readingTime } from '@/lib/blog-content';
 import { blogService, taxonomyService } from '@/services/blog.service';
 import { useAuth } from '@/store/authStore';
 import type { Blog, BlogCategory } from '@/types/blog';
@@ -113,11 +113,12 @@ function secondaryCta(role?: string) {
 function LatestBlog({ blog }: { blog: Blog }) {
   const target = blog.slug ? `/blogs/${blog.slug}` : `/blogs`;
   const excerpt = blog.excerpt || excerptFromContent(blog.content ?? '', 240);
+  const coverUrl = coverImageUrl(blog);
 
   return (
     <article className="overflow-hidden rounded-2xl border border-[#ded3c4] bg-[#fbf7ef] shadow-[10px_10px_28px_rgba(98,69,39,0.13),-8px_-8px_22px_rgba(255,252,243,0.75)]">
-      {blog.coverImage ? (
-        <img src={blog.coverImage} alt={blog.title} className="aspect-[16/8] w-full object-cover" />
+      {coverUrl ? (
+        <img src={coverUrl} alt={coverImageAlt(blog)} className="aspect-[16/8] w-full object-cover" />
       ) : (
         <div className="aspect-[16/8] w-full bg-[#53693a]" aria-hidden="true" />
       )}
@@ -138,11 +139,12 @@ function LatestBlog({ blog }: { blog: Blog }) {
 function BlogListItem({ blog }: { blog: Blog }) {
   const target = blog.slug ? `/blogs/${blog.slug}` : `/blogs`;
   const excerpt = blog.excerpt || excerptFromContent(blog.content ?? '', 120);
+  const coverUrl = coverImageUrl(blog);
 
   return (
     <article className="rounded-2xl border border-[#ded3c4] bg-[#fbf7ef] p-4 transition hover:border-[#c2a16b] hover:bg-[#fffaf1]">
       <div className="flex items-start gap-3">
-        {blog.coverImage && <img src={blog.coverImage} alt={blog.title} loading="lazy" className="h-20 w-24 shrink-0 rounded-xl object-cover" />}
+        {coverUrl && <img src={coverUrl} alt={coverImageAlt(blog)} loading="lazy" className="h-20 w-24 shrink-0 rounded-xl object-cover" />}
         <div className="min-w-0 flex-1">
           <Link to={target} className="line-clamp-2 font-serif text-xl font-semibold leading-tight text-[#231b17] hover:text-[#7b2d32]">{blog.title}</Link>
           {excerpt && <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#74685f]">{excerpt}</p>}

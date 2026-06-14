@@ -17,7 +17,7 @@ export default function RegisterPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (form.name.trim().length < 2) return toast.error('Name must be at least 2 characters.');
-    if (form.password.length < 8) return toast.error('Password must be at least 8 characters.');
+    if (form.password.length < 6) return toast.error('Password must be at least 6 characters.');
     setSubmitting(true);
     try {
       await register(form);
@@ -43,6 +43,7 @@ export default function RegisterPage() {
             <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" />
             <Input type="email" required value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" />
             <Input type="password" required value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Password" />
+            <p className="text-xs font-medium text-[#74685f]">Password must be at least 6 characters.</p>
             <Button className="w-full" disabled={submitting}>{submitting ? 'Creating...' : 'Create account'}</Button>
           </form>
           <p className="mt-4 text-sm text-[#74685f]">Already registered? <Link className="font-semibold text-[#7b2d32] underline" to="/login">Login</Link></p>

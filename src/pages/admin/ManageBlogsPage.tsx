@@ -45,7 +45,7 @@ export default function ManageBlogsPage() {
   useEffect(load, [debounced, page, status]);
 
   async function publish(blog: Blog) {
-    if (blog.status !== 'APPROVED') return toast.error('Only approved blogs can be published.');
+    if (!canPublishStatus(blog.status)) return toast.error('Only submitted, approved, or unpublished blogs can be published.');
     if (processing.has(blog.id)) return;
     setProcessing((prev) => new Set(prev).add(blog.id));
     try {
@@ -117,8 +117,10 @@ export default function ManageBlogsPage() {
                       <Button asChild size="sm" variant="outline"><Link to={`/editor/blogs/${blog.id}/edit`}><Pencil className="h-4 w-4" /> Edit</Link></Button>
                       {blog.status === 'PUBLISHED' ? (
                         <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void unpublish(blog)}><Undo2 className="h-4 w-4" /> Unpublish</Button>
+                      ) : blog.status === 'UNPUBLISHED' ? (
+                        <Button size="sm" disabled={processing.has(blog.id)} onClick={() => void publish(blog)}><Send className="h-4 w-4" /> Republish</Button>
                       ) : (
-                        <Button size="sm" disabled={blog.status !== 'APPROVED' || processing.has(blog.id)} onClick={() => void publish(blog)}><Send className="h-4 w-4" /> Publish</Button>
+                        <Button size="sm" disabled={!canPublishStatus(blog.status) || processing.has(blog.id)} onClick={() => void publish(blog)}><Send className="h-4 w-4" /> Publish</Button>
                       )}
                       <Button size="sm" variant="destructive" disabled={processing.has(blog.id)} onClick={() => setDeleteTarget(blog)}><Trash2 className="h-4 w-4" /> Delete</Button>
                     </div>
@@ -140,4 +142,8 @@ export default function ManageBlogsPage() {
       />
     </div>
   );
+}
+
+function canPublishStatus(status: BlogStatus) {
+  return status === 'SUBMITTED' || status === 'APPROVED' || status === 'UNPUBLISHED';
 }

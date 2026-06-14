@@ -40,6 +40,11 @@ export const adminService = {
     return unwrapData<User>(data);
   },
 
+  async deleteUser(id: string) {
+    const { data } = await api.delete<User | { user?: User }>(`/admin/users/${id}`);
+    return data ? unwrapData<User>(data) : ({ id, status: 'DELETED' } as User);
+  },
+
   async createEditor(payload: RegisterPayload) {
     const { data } = await api.post<User>('/admin/editors', payload);
     return unwrapData<User>(data);

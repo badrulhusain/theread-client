@@ -18,9 +18,7 @@ export default function CreateStaffPage() {
   async function onSubmit(event: FormEvent) {
     event.preventDefault();
     if (form.name.trim().length < 2) return toast.error('Name must be at least 2 characters.');
-    if (!/[A-Z]/.test(form.password) || !/[0-9]/.test(form.password) || form.password.length < 10) {
-      return toast.error('Password must be 10+ characters with an uppercase letter and number.');
-    }
+    if (form.password.length < 6) return toast.error('Password must be at least 6 characters.');
     setSubmitting(true);
     try {
       if (isAdmin) await adminService.createAdmin(form);
@@ -44,7 +42,8 @@ export default function CreateStaffPage() {
         <form className="space-y-4" onSubmit={onSubmit}>
           <Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" />
           <Input required type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" />
-          <Input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Strong password" />
+          <Input required type="password" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} placeholder="Password" />
+          <p className="text-xs font-medium text-[#74685f]">Password must be at least 6 characters.</p>
           <Button disabled={submitting}>{submitting ? 'Creating...' : `Create ${isAdmin ? 'admin' : 'editor'}`}</Button>
         </form>
       </CardContent>

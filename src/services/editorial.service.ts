@@ -1,7 +1,12 @@
 import { api, unwrapData, unwrapList } from '@/lib/api';
 import { normalizeBlog, normalizeBlogStatus } from '@/lib/blog-status';
 import type { QueryParams } from '@/types/api';
-import type { Blog, BlogFormPayload, DashboardSummary } from '@/types/blog';
+import type {
+  Blog,
+  BlogCoverImage,
+  BlogFormPayload,
+  DashboardSummary,
+} from '@/types/blog';
 import type { AuthUser } from '@/types/auth';
 
 export function isAssignedToEditor(blog: Blog | null | undefined, user: AuthUser | null | undefined) {
@@ -70,6 +75,11 @@ export const editorialService = {
     return normalizeBlog(unwrapData<Blog>(data));
   },
 
+  async updateCoverImage(id: string, coverImage: BlogCoverImage | null) {
+    const { data } = await api.patch<Blog>(`/blogs/${id}/cover-image`, { coverImage });
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
+
   async approve(id: string, comment?: string) {
     const { data } = await api.post<Blog>(`/editorial/blogs/${id}/approve`, { comment });
     return normalizeBlog(unwrapData<Blog>(data));
@@ -84,9 +94,23 @@ export const editorialService = {
     const { data } = await api.post<Blog>(`/editorial/blogs/${id}/request-revision`, { comment });
     return normalizeBlog(unwrapData<Blog>(data));
   },
+
+  async publish(id: string) {
+    const { data } = await api.post<Blog>(`/editorial/blogs/${id}/publish`);
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
+
+  async unpublish(id: string) {
+    const { data } = await api.post<Blog>(`/editorial/blogs/${id}/unpublish`);
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
 };
 
 export function canEditorWorkOn(blog: Blog | null | undefined, user: AuthUser | null | undefined) {
   if (!blog || !user) return false;
   return normalizeBlogStatus(blog.status) === 'UNDER_REVIEW' && (user.role === 'EDITOR' || user.role === 'ADMIN');
+}
+
+export function canManageEditorialBlog(user: AuthUser | null | undefined) {
+  return user?.role === 'EDITOR' || user?.role === 'ADMIN';
 }

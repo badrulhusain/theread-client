@@ -32,8 +32,13 @@ export interface Blog {
   title: string;
   excerpt?: string;
   content?: string;
-  coverImage?: string | null;
+  coverImage?: string | BlogCoverImage | null;
   coverImagePublicId?: string | null;
+  imageUrl?: string | null;
+  altText?: string | null;
+  coverImageAltText?: string | null;
+  crop?: BlogImageCrop | null;
+  coverImageCrop?: BlogImageCrop | null;
   seoTitle?: string;
   seoDescription?: string;
   category?: BlogCategory | string | null;
@@ -53,12 +58,26 @@ export interface Blog {
   reviewComments?: ReviewComment[];
 }
 
+export interface BlogImageCrop {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  zoom: number;
+}
+
+export interface BlogCoverImage {
+  url: string;
+  publicId?: string | null;
+  altText?: string | null;
+  crop?: BlogImageCrop | null;
+}
+
 export interface BlogFormPayload {
   title: string;
   excerpt?: string;
   content: string;
-  coverImage?: string | null;
-  coverImagePublicId?: string | null;
+  coverImage?: BlogCoverImage | null;
   seoTitle?: string;
   seoDescription?: string;
   categoryId?: string | null;

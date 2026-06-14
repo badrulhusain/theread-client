@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { formatDate } from '@/components/blog/BlogCard';
 import { CommentSection } from '@/components/comments/CommentSection';
-import { normalizeCategoryName, normalizeTagName, readingTime, wordCount } from '@/lib/blog-content';
+import { coverImageAlt, coverImageUrl, normalizeCategoryName, normalizeTagName, readingTime, sanitizeHtml, wordCount } from '@/lib/blog-content';
 import { blogService } from '@/services/blog.service';
 import type { Blog } from '@/types/blog';
 
@@ -55,10 +55,11 @@ export default function BlogDetailPage() {
     meta.setAttribute('content', description);
   }, [blog]);
 
-  const html = useMemo(() => addHeadingIds(blog?.content ?? ''), [blog?.content]);
+  const html = useMemo(() => addHeadingIds(sanitizeHtml(blog?.content ?? '')), [blog?.content]);
   const toc = useMemo(() => buildToc(html), [html]);
   const category = normalizeCategoryName(blog?.category);
   const tags = (blog?.tags ?? []).map(normalizeTagName).filter(Boolean);
+  const coverUrl = blog ? coverImageUrl(blog) : '';
 
   if (loading) return <main className="mx-auto max-w-4xl px-4 py-10"><div className="h-80 animate-pulse rounded-2xl border border-[#ded3c4] bg-[#fbf7ef]" /></main>;
   if (error || !blog) {
@@ -73,7 +74,7 @@ export default function BlogDetailPage() {
     <main className="pb-24 md:pb-10">
       <div className="fixed left-0 top-0 z-50 h-1 bg-[#7b2d32] transition-all" style={{ width: `${progress}%` }} />
       <article className="mx-auto max-w-4xl px-4 py-10">
-        {blog.coverImage && <img src={blog.coverImage} alt={blog.title} loading="eager" className="mb-8 aspect-[16/7] w-full rounded-2xl border border-[#ded3c4] object-cover shadow-sm" />}
+        {coverUrl && <img src={coverUrl} alt={coverImageAlt(blog)} loading="eager" className="mb-8 aspect-[16/7] w-full rounded-2xl border border-[#ded3c4] object-cover shadow-sm" />}
         <div className="flex flex-wrap gap-2">
           {category && <span className="rounded-full bg-[#eee6da] px-3 py-1 text-xs font-semibold text-[#7b2d32]">{category}</span>}
           {tags.map((tag) => <span key={tag} className="rounded-full border border-[#ded3c4] px-3 py-1 text-xs font-medium text-[#74685f]">{tag}</span>)}

@@ -19,7 +19,7 @@ interface ImageUploadProps {
 
 const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
 const maxBytesByType: Record<UploadImageType, number> = {
-  BLOG_COVER: 5 * 1024 * 1024,
+  BLOG_COVER: 2 * 1024 * 1024,
   PROFILE_IMAGE: 2 * 1024 * 1024,
 };
 
@@ -39,7 +39,7 @@ export function ImageUpload({
   const [error, setError] = useState('');
 
   const maxSize = maxBytesByType[type];
-  const help = helperText ?? `${type === 'BLOG_COVER' ? 'Recommended 1200x630. Max 5MB.' : 'Max 2MB.'} JPEG, PNG, or WebP.`;
+  const help = helperText ?? `${type === 'BLOG_COVER' ? 'Recommended size: 1200 x 675 px. Maximum size: 2 MB.' : 'Max 2MB.'} Supported formats: JPG, PNG, WEBP.`;
 
   async function handleFile(file: File | undefined) {
     setError('');

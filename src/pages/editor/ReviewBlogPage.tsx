@@ -8,34 +8,34 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { StatusBadge } from '@/components/ui/badge';
 import { RichTextEditor } from '@/components/editor/RichTextEditor';
+import { CoverImageManager } from '@/components/uploads/CoverImageManager';
 import { apiMessage } from '@/lib/api';
+import { isValidOptionalUrl, sanitizeHtml, stripHtml } from '@/lib/blog-content';
 import { canEditorWorkOn, editorialService } from '@/services/editorial.service';
 import { useAuth } from '@/store/authStore';
-import type { Blog, BlogFormPayload, BlogStatus } from '@/types/blog';
+import type { Blog, BlogCoverImage, BlogFormPayload, BlogStatus } from '@/types/blog';
+
+type ReviewEditForm = Pick<BlogFormPayload, 'title' | 'excerpt' | 'content' | 'coverImage'>;
 
 export default function ReviewBlogPage() {
   const { id = '' } = useParams();
   const { user } = useAuth();
   const [blog, setBlog] = useState<Blog | null>(null);
-  const [editForm, setEditForm] = useState<BlogFormPayload>({ title: '', excerpt: '', content: '', coverImage: '' });
+  const [editForm, setEditForm] = useState<ReviewEditForm>({ title: '', excerpt: '', content: '', coverImage: null });
   const [mode, setMode] = useState<'review' | 'edit'>('review');
   const [comment, setComment] = useState('');
   const [commentAction, setCommentAction] = useState<'reject' | 'revision' | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   function load() {
     setLoading(true);
     editorialService.getBlog(id)
       .then((data) => {
         setBlog(data);
-        setEditForm({
-          title: data.title,
-          excerpt: data.excerpt ?? '',
-          content: data.content ?? '',
-          coverImage: data.coverImage ?? '',
-        });
+        setEditForm(formFromBlog(data));
       })
       .catch((error) => toast.error(apiMessage(error, 'Could not load this blog.')))
       .finally(() => setLoading(false));
@@ -44,7 +44,9 @@ export default function ReviewBlogPage() {
   useEffect(load, [id]);
 
   const canReview = canEditorWorkOn(blog, user);
+  const canManagePublication = user?.role === 'EDITOR' || user?.role === 'ADMIN';
   const decisionCommentLength = comment.trim().length;
+  const publicationAction = getPublicationAction(blog?.status);
 
   async function run(action: 'pick' | 'approve' | 'reject' | 'revision') {
     if ((action === 'reject' || action === 'revision') && decisionCommentLength < 10) {
@@ -81,12 +83,7 @@ export default function ReviewBlogPage() {
           };
         });
         if (updated) {
-          setEditForm({
-            title: updated.title,
-            excerpt: updated.excerpt ?? '',
-            content: updated.content ?? '',
-            coverImage: updated.coverImage ?? '',
-          });
+          setEditForm(formFromBlog(updated));
         }
       }
       toast.success('Review updated.');
@@ -103,28 +100,35 @@ export default function ReviewBlogPage() {
   async function saveEdit() {
     if (!canReview) return toast.error('Pick this blog before editing it.');
     if (editForm.title.trim().length < 3) return toast.error('Title must be at least 3 characters.');
-    if (editForm.content.trim().length < 50) return toast.error('Content must be at least 50 characters.');
+    if (stripHtml(editForm.content).trim().length < 50) return toast.error('Content must be at least 50 characters.');
+    if (uploadingCover) return toast.error('Wait for the cover image upload to finish.');
+    if (!isValidOptionalUrl(editForm.coverImage?.url)) return toast.error('Cover image must be a valid http or https URL.');
     setSavingEdit(true);
     try {
-      const updated = await editorialService.update(id, {
-        ...editForm,
-        title: editForm.title.trim(),
-        excerpt: editForm.excerpt?.trim(),
-        coverImage: editForm.coverImage || null,
-      });
+      await editorialService.update(id, buildEditPayload(editForm));
+      const updated = await editorialService.updateCoverImage(id, editForm.coverImage ?? null);
       setBlog(updated);
-      setEditForm({
-        title: updated.title,
-        excerpt: updated.excerpt ?? '',
-        content: updated.content ?? '',
-        coverImage: updated.coverImage ?? '',
-      });
+      setEditForm(formFromBlog(updated));
       setMode('review');
       toast.success('Blog edits saved.');
     } catch (error) {
       toast.error(apiMessage(error, 'Could not save blog edits.'));
     } finally {
       setSavingEdit(false);
+    }
+  }
+
+  async function runPublication(action: 'publish' | 'unpublish') {
+    setSubmitting(action);
+    try {
+      const updated = action === 'publish' ? await editorialService.publish(id) : await editorialService.unpublish(id);
+      setBlog(updated);
+      setEditForm(formFromBlog(updated));
+      toast.success(action === 'publish' ? 'Blog published.' : 'Blog unpublished.');
+    } catch (error) {
+      toast.error(apiMessage(error, action === 'publish' ? 'Could not publish blog.' : 'Could not unpublish blog.'));
+    } finally {
+      setSubmitting('');
     }
   }
 
@@ -148,8 +152,17 @@ export default function ReviewBlogPage() {
               <>
                 <Button variant={mode === 'review' ? 'default' : 'outline'} onClick={() => setMode('review')}><Eye className="h-4 w-4" /> Review</Button>
                 <Button variant={mode === 'edit' ? 'default' : 'outline'} onClick={() => setMode('edit')}><Edit3 className="h-4 w-4" /> Edit</Button>
-                <Button asChild variant="ghost"><Link to={`/editor/blogs/${blog.id}/edit`}>Full edit page</Link></Button>
               </>
+            )}
+            {canManagePublication && <Button asChild variant="ghost"><Link to={`/editor/blogs/${blog.id}/edit`}>Full edit page</Link></Button>}
+            {canManagePublication && publicationAction && (
+              <Button
+                variant={publicationAction.action === 'unpublish' ? 'outline' : 'default'}
+                disabled={!!submitting || savingEdit || uploadingCover}
+                onClick={() => void runPublication(publicationAction.action)}
+              >
+                {submitting === publicationAction.action ? `${publicationAction.loadingLabel}...` : publicationAction.label}
+              </Button>
             )}
           </div>
         </CardHeader>
@@ -158,11 +171,18 @@ export default function ReviewBlogPage() {
             <div className="space-y-4">
               <Input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} placeholder="Title" maxLength={160} />
               <Input value={editForm.excerpt} onChange={(e) => setEditForm({ ...editForm, excerpt: e.target.value })} placeholder="Excerpt" maxLength={280} />
-              <Input value={editForm.coverImage ?? ''} onChange={(e) => setEditForm({ ...editForm, coverImage: e.target.value })} placeholder="Cover image URL" />
+              <CoverImageManager
+                value={editForm.coverImage}
+                title={editForm.title}
+                excerpt={editForm.excerpt}
+                disabled={savingEdit}
+                onUploadingChange={setUploadingCover}
+                onSave={(coverImage) => setEditForm({ ...editForm, coverImage })}
+              />
               <RichTextEditor value={editForm.content} onChange={(content) => setEditForm({ ...editForm, content })} />
               <div className="flex flex-wrap gap-2">
-                <Button disabled={savingEdit} onClick={() => void saveEdit()}><Save className="h-4 w-4" /> {savingEdit ? 'Saving...' : 'Save edits'}</Button>
-                <Button type="button" variant="outline" disabled={savingEdit} onClick={() => setMode('review')}>Cancel</Button>
+                <Button disabled={savingEdit || uploadingCover} onClick={() => void saveEdit()}><Save className="h-4 w-4" /> {savingEdit ? 'Saving...' : 'Save edits'}</Button>
+                <Button type="button" variant="outline" disabled={savingEdit || uploadingCover} onClick={() => setMode('review')}>Cancel</Button>
               </div>
             </div>
           ) : (
@@ -170,7 +190,7 @@ export default function ReviewBlogPage() {
               {blog.excerpt && (
                 <p className="max-w-4xl text-base font-medium leading-7 text-[#3a2b22]">{blog.excerpt}</p>
               )}
-              <article className="prose-read max-w-5xl rounded-2xl border border-[#ded3c4] bg-[#fffaf1] p-5 font-serif text-[17px] leading-9 text-[#120d09] shadow-inner md:p-7" dangerouslySetInnerHTML={{ __html: blog.content ?? '' }} />
+              <article className="prose-read max-w-5xl rounded-2xl border border-[#ded3c4] bg-[#fffaf1] p-5 font-serif text-[17px] leading-9 text-[#120d09] shadow-inner md:p-7" dangerouslySetInnerHTML={{ __html: sanitizeHtml(blog.content ?? '') }} />
               <section>
                 <h3 className="font-serif text-xl font-semibold text-[#17110d]">Review comments</h3>
                 {blog.reviewComments?.length ? (
@@ -197,17 +217,17 @@ export default function ReviewBlogPage() {
               />
               {commentAction && <p className={decisionCommentLength < 10 ? 'text-sm text-red-600' : 'text-sm text-green-700'}>{decisionCommentLength}/10 characters</p>}
               <div className="grid gap-2">
-                <Button disabled={!!submitting || savingEdit} onClick={() => void run('approve')}><CheckCircle className="h-4 w-4" /> {submitting === 'approve' ? 'Approving...' : 'Approve'}</Button>
+                <Button disabled={!!submitting || savingEdit || uploadingCover} onClick={() => void run('approve')}><CheckCircle className="h-4 w-4" /> {submitting === 'approve' ? 'Approving...' : 'Approve'}</Button>
                 <Button
                   variant="outline"
-                  disabled={!!submitting || savingEdit}
+                  disabled={!!submitting || savingEdit || uploadingCover}
                   onClick={() => commentAction === 'revision' ? void run('revision') : setCommentAction('revision')}
                 >
                   <RotateCcw className="h-4 w-4" /> {submitting === 'revision' ? 'Requesting...' : 'Request revision'}
                 </Button>
                 <Button
                   variant="destructive"
-                  disabled={!!submitting || savingEdit}
+                  disabled={!!submitting || savingEdit || uploadingCover}
                   onClick={() => commentAction === 'reject' ? void run('reject') : setCommentAction('reject')}
                 >
                   <XCircle className="h-4 w-4" /> {submitting === 'reject' ? 'Rejecting...' : 'Reject'}
@@ -223,4 +243,40 @@ export default function ReviewBlogPage() {
       </Card>
     </div>
   );
+}
+
+function getPublicationAction(status?: BlogStatus) {
+  if (status === 'SUBMITTED') return { action: 'publish' as const, label: 'Publish', loadingLabel: 'Publishing' };
+  if (status === 'UNPUBLISHED') return { action: 'publish' as const, label: 'Republish', loadingLabel: 'Republishing' };
+  if (status === 'PUBLISHED') return { action: 'unpublish' as const, label: 'Unpublish', loadingLabel: 'Unpublishing' };
+  return null;
+}
+
+function formFromBlog(blog: Blog): ReviewEditForm {
+  return {
+    title: blog.title,
+    excerpt: blog.excerpt ?? '',
+    content: blog.content ?? '',
+    coverImage: coverImageFromBlog(blog),
+  };
+}
+
+function buildEditPayload(form: BlogFormPayload): BlogFormPayload {
+  return {
+    title: form.title.trim(),
+    excerpt: form.excerpt?.trim(),
+    content: form.content,
+  };
+}
+
+function coverImageFromBlog(blog: Blog): BlogCoverImage | null {
+  if (blog.coverImage && typeof blog.coverImage === 'object') return blog.coverImage;
+  const url = typeof blog.coverImage === 'string' ? blog.coverImage : blog.imageUrl;
+  if (!url) return null;
+  return {
+    url,
+    publicId: blog.coverImagePublicId ?? null,
+    altText: blog.altText ?? blog.coverImageAltText ?? null,
+    crop: blog.crop ?? blog.coverImageCrop ?? null,
+  };
 }

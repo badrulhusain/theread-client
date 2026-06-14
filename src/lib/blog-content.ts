@@ -1,3 +1,11 @@
+import DOMPurify from 'dompurify';
+import type { Blog } from '@/types/blog';
+
+export function sanitizeHtml(value = '') {
+  if (!value) return '';
+  return DOMPurify.sanitize(value);
+}
+
 export function stripHtml(value = '') {
   if (!value) return '';
   if (typeof window === 'undefined') return value.replace(/<[^>]+>/g, ' ');
@@ -40,4 +48,14 @@ export function normalizeCategoryName(category: unknown) {
   if (!category) return '';
   if (typeof category === 'string') return category;
   return (category as { name?: string })?.name ?? '';
+}
+
+export function coverImageUrl(blog: Pick<Blog, 'coverImage' | 'imageUrl'>) {
+  if (blog.coverImage && typeof blog.coverImage === 'object') return blog.coverImage.url;
+  return blog.coverImage || blog.imageUrl || '';
+}
+
+export function coverImageAlt(blog: Pick<Blog, 'coverImage' | 'altText' | 'coverImageAltText' | 'title'>) {
+  if (blog.coverImage && typeof blog.coverImage === 'object') return blog.coverImage.altText || blog.title;
+  return blog.altText || blog.coverImageAltText || blog.title;
 }
