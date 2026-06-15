@@ -40,7 +40,7 @@ export default function HomePage() {
 
   return (
     <main className="pb-24 md:pb-0">
-      <section className="border-b border-[#ded3c4] bg-[#f4efe6]">
+      <section className="border-b border-white/40 bg-[#eef0e9] shadow-[inset_0_-10px_22px_rgba(97,85,68,0.07)]">
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-4 py-8 md:px-8">
           <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
             <div>
@@ -70,13 +70,13 @@ export default function HomePage() {
           <Button asChild variant="ghost"><Link to="/blogs">View all</Link></Button>
         </div>
         {loading ? (
-          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]"><div className="h-[420px] animate-pulse rounded-2xl border border-[#ded3c4] bg-[#fbf7ef]" /><div className="space-y-3">{[1, 2, 3, 4].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-[#ded3c4] bg-[#fbf7ef]" />)}</div></div>
+          <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_380px]"><div className="h-[420px] animate-pulse rounded-2xl border border-white/60 bg-[#eef0e9] shadow-[inset_8px_8px_16px_rgba(97,85,68,0.12),inset_-8px_-8px_16px_rgba(255,255,250,0.82)]" /><div className="space-y-3">{[1, 2, 3, 4].map((item) => <div key={item} className="h-24 animate-pulse rounded-2xl border border-white/60 bg-[#eef0e9] shadow-[inset_6px_6px_12px_rgba(97,85,68,0.1),inset_-6px_-6px_12px_rgba(255,255,250,0.82)]" />)}</div></div>
         ) : featured ? (
           <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_400px]">
             <LatestBlog blog={featured} />
             <div className="space-y-3">
               <h3 className="font-serif text-2xl font-semibold text-[#231b17]">More to read</h3>
-              {latest.length ? latest.map((blog) => <BlogListItem key={blog.id} blog={blog} />) : <p className="rounded-2xl border border-[#ded3c4] bg-[#fbf7ef] p-4 text-sm text-[#74685f]">No more blogs yet.</p>}
+              {latest.length ? latest.map((blog) => <BlogListItem key={blog.id} blog={blog} />) : <p className="rounded-2xl border border-white/60 bg-[#eef0e9] p-4 text-sm text-[#74685f] shadow-[inset_5px_5px_10px_rgba(97,85,68,0.1),inset_-5px_-5px_10px_rgba(255,255,250,0.8)]">No more blogs yet.</p>}
             </div>
           </div>
         ) : (
@@ -84,7 +84,7 @@ export default function HomePage() {
         )}
       </section>
       <section className="mx-auto max-w-7xl px-4 pb-10 md:px-8">
-        <div className="flex flex-col gap-4 rounded-2xl border border-[#ded3c4] bg-[#fbf7ef] p-5 md:flex-row md:items-center md:justify-between md:p-6">
+        <div className="flex flex-col gap-4 rounded-2xl border border-white/60 bg-[#eef0e9] p-5 shadow-[12px_12px_26px_rgba(97,85,68,0.16),-9px_-9px_22px_rgba(255,255,250,0.84)] md:flex-row md:items-center md:justify-between md:p-6">
           <div>
             <h2 className="font-serif text-2xl font-semibold text-[#231b17]">Interested in writing?</h2>
             <p className="mt-1 max-w-2xl text-sm leading-6 text-[#74685f]">Upload your blog draft and send it to the editorial team when it is ready.</p>
@@ -96,7 +96,7 @@ export default function HomePage() {
         <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8">
           <h2 className="mb-3 font-serif text-2xl font-semibold text-[#231b17]">Categories</h2>
           <div className="flex gap-2 overflow-x-auto pb-2">
-            {categories.map((category) => <Link key={category.id} to={`/blogs?categoryId=${category.id}`} className="shrink-0 rounded-full border border-[#ded3c4] bg-[#fbf7ef] px-4 py-2 text-sm font-semibold text-[#7b2d32] hover:border-[#c2a16b]">{category.name}</Link>)}
+            {categories.map((category) => <Link key={category.id} to={`/blogs?categoryId=${category.id}`} className="shrink-0 rounded-full border border-white/60 bg-[#eef0e9] px-4 py-2 text-sm font-semibold text-[#7b2d32] shadow-[5px_5px_12px_rgba(97,85,68,0.14),-4px_-4px_10px_rgba(255,255,250,0.8)] hover:bg-[#f5f6f1]">{category.name}</Link>)}
           </div>
         </section>
       )}
@@ -116,7 +116,7 @@ function LatestBlog({ blog }: { blog: Blog }) {
   const coverUrl = coverImageUrl(blog);
 
   return (
-    <article className="overflow-hidden rounded-2xl border border-[#ded3c4] bg-[#fbf7ef] shadow-[10px_10px_28px_rgba(98,69,39,0.13),-8px_-8px_22px_rgba(255,252,243,0.75)]">
+    <article className="overflow-hidden rounded-2xl border border-white/60 bg-[#eef0e9] shadow-[15px_15px_32px_rgba(97,85,68,0.18),-10px_-10px_24px_rgba(255,255,250,0.86)]">
       {coverUrl ? (
         <img src={coverUrl} alt={coverImageAlt(blog)} className="aspect-[16/8] w-full object-cover" />
       ) : (
@@ -142,7 +142,7 @@ function BlogListItem({ blog }: { blog: Blog }) {
   const coverUrl = coverImageUrl(blog);
 
   return (
-    <article className="rounded-2xl border border-[#ded3c4] bg-[#fbf7ef] p-4 transition hover:border-[#c2a16b] hover:bg-[#fffaf1]">
+    <article className="rounded-2xl border border-white/60 bg-[#eef0e9] p-4 shadow-[8px_8px_18px_rgba(97,85,68,0.14),-6px_-6px_14px_rgba(255,255,250,0.82)] transition hover:-translate-y-0.5 hover:bg-[#f5f6f1] hover:shadow-[11px_11px_24px_rgba(97,85,68,0.16),-7px_-7px_16px_rgba(255,255,250,0.88)]">
       <div className="flex items-start gap-3">
         {coverUrl && <img src={coverUrl} alt={coverImageAlt(blog)} loading="lazy" className="h-20 w-24 shrink-0 rounded-xl object-cover" />}
         <div className="min-w-0 flex-1">

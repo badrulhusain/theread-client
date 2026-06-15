@@ -8,6 +8,7 @@ import { FeedDesktop, FeedMobile } from './screens/Feed';
 import { PostDesktop, PostMobile } from './screens/Post';
 import { WriteDesktop, WriteMobile } from './screens/Write';
 import { ProfileDesktop, ProfileMobile } from './screens/Profile';
+import { NotificationsDesktop, NotificationsMobile } from './screens/Notifications';
 import { AuthProvider, useAuth } from './AuthContext';
 import { postsApi } from './api';
 import type { Post, RouteKey } from './types';
@@ -84,12 +85,7 @@ const AppInner: React.FC = () => {
             {route === 'feed' && <FeedDesktop nav={go} />}
             {route === 'write' && <WriteDesktop user={user!} nav={go} editPost={editPost ?? undefined} />}
             {route === 'post' && currentPost && <PostDesktop post={currentPost} user={user!} nav={go} />}
-            {route === 'notifications' && (
-              <div style={{ padding: '28px 32px' }}>
-                <div className="tr-display" style={{ fontSize: 40, fontWeight: 600 }}>Notifications</div>
-                <p style={{ color: 'var(--ink-2)', marginTop: 12 }}>No new notifications.</p>
-              </div>
-            )}
+            {route === 'notifications' && <NotificationsDesktop />}
             {route === 'profile' && <ProfileDesktop user={user!} nav={go} />}
           </div>
         </div>
@@ -110,12 +106,7 @@ const AppInner: React.FC = () => {
           {route === 'feed' && <FeedMobile nav={go} />}
           {route === 'write' && <WriteMobile user={user!} nav={go} editPost={editPost ?? undefined} />}
           {route === 'post' && currentPost && <PostMobile post={currentPost} nav={go} user={user!} />}
-          {route === 'notifications' && (
-            <div style={{ padding: '14px 16px 90px' }}>
-              <h1 className="tr-display" style={{ margin: '0 0 14px', fontSize: 28, fontWeight: 600 }}>Notifications</h1>
-              <p style={{ color: 'var(--ink-2)' }}>No new notifications.</p>
-            </div>
-          )}
+          {route === 'notifications' && <NotificationsMobile />}
           {route === 'profile' && <ProfileMobile user={user!} nav={go} />}
         </div>
         <MobileTabBar route={route} go={go} />

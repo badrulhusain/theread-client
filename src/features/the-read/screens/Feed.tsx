@@ -7,11 +7,12 @@ import type { Post, Tag } from '../types';
 
 // ── Feed row (desktop) ────────────────────────────────────────────────────────
 const FeedPostRow: React.FC<{ post: Post; onOpen: (p: Post) => void }> = ({ post, onOpen }) => (
-  <article className="hover-lift" onClick={() => onOpen(post)} style={{
+  <article className="neu-row hover-lift" onClick={() => onOpen(post)} style={{
     display: 'grid', gridTemplateColumns: '1fr 180px',
-    gap: 22, padding: '22px 0',
-    borderBottom: '1px solid var(--line)',
+    gap: 22, padding: '18px 20px',
+    borderRadius: 16,
     cursor: 'pointer',
+    margin: '14px 0',
   }}>
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
@@ -34,7 +35,7 @@ const FeedPostRow: React.FC<{ post: Post; onOpen: (p: Post) => void }> = ({ post
       height: 130, borderRadius: 12, background: post.cover,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       color: '#fbf8f2', fontSize: 50, fontFamily: "'Fraunces',serif",
-      boxShadow: '3px 3px 8px var(--sh-hi)', opacity: .95,
+      boxShadow: '8px 8px 18px var(--sh-hi), -4px -4px 10px rgba(255,255,250,.36)', opacity: .95,
     }}>
       <div style={{ opacity: .5 }}>{post.coverAccent}</div>
     </div>
@@ -43,7 +44,7 @@ const FeedPostRow: React.FC<{ post: Post; onOpen: (p: Post) => void }> = ({ post
 
 // ── Feed card (mobile) ────────────────────────────────────────────────────────
 const FeedMobileCard: React.FC<{ post: Post; onOpen: (p: Post) => void }> = ({ post, onOpen }) => (
-  <article className="neu hover-lift" onClick={() => onOpen(post)} style={{ borderRadius: 18, overflow: 'hidden', cursor: 'pointer' }}>
+  <article className="neu neu-ring hover-lift" onClick={() => onOpen(post)} style={{ borderRadius: 18, overflow: 'hidden', cursor: 'pointer' }}>
     <div style={{
       height: 130, background: post.cover,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -70,7 +71,7 @@ const FeedMobileCard: React.FC<{ post: Post; onOpen: (p: Post) => void }> = ({ p
 const FeedSkeleton: React.FC = () => (
   <div style={{ padding: '22px 0' }}>
     {[1, 2, 3].map(i => (
-      <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: 22, padding: '22px 0', borderBottom: '1px solid var(--line)' }}>
+      <div key={i} className="neu-row-soft" style={{ display: 'grid', gridTemplateColumns: '1fr 180px', gap: 22, padding: '18px 20px', borderRadius: 16, margin: '14px 0' }}>
         <div>
           <div className="neu-inset" style={{ height: 14, width: 200, borderRadius: 7, marginBottom: 12 }} />
           <div className="neu-inset" style={{ height: 22, width: '80%', borderRadius: 7, marginBottom: 8 }} />
@@ -134,7 +135,7 @@ export const FeedDesktop: React.FC<{ nav: (r: any, p?: Post) => void }> = ({ nav
         ))}
       </div>
 
-      <NeuCard padded={false} style={{ padding: '6px 28px' }}>
+      <NeuCard padded={false} style={{ padding: '8px 18px' }}>
         {loading ? <FeedSkeleton /> : filtered.length === 0
           ? <p style={{ padding: '40px 0', textAlign: 'center', color: 'var(--ink-3)' }}>No essays found.</p>
           : filtered.map(p => <FeedPostRow key={p.id} post={p} onOpen={p => nav('post', p)} />)

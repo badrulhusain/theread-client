@@ -12,7 +12,7 @@ export function BlogCard({ blog, showStatus = false, featured = false }: { blog:
   const excerpt = blog.excerpt || excerptFromContent(blog.content ?? '') || 'No excerpt yet.';
   const coverUrl = coverImageUrl(blog);
   return (
-    <Card className="group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-[14px_14px_34px_rgba(98,69,39,0.16),-8px_-8px_22px_rgba(255,252,243,0.7)]">
+    <Card className="group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-[16px_16px_34px_rgba(97,85,68,0.2),-10px_-10px_24px_rgba(255,255,250,0.86)]">
       {coverUrl ? (
         <img src={coverUrl} alt={coverImageAlt(blog)} loading="lazy" className={featured ? 'h-48 w-full object-cover' : 'h-28 w-full object-cover'} />
       ) : (
@@ -25,8 +25,8 @@ export function BlogCard({ blog, showStatus = false, featured = false }: { blog:
       <CardContent className="space-y-3">
         {(category || tags.length > 0) && (
           <div className="flex flex-wrap gap-2">
-            {category && <span className="rounded-full bg-[#eee6da] px-2.5 py-1 text-xs font-semibold text-[#7b2d32]">{category}</span>}
-            {tags.map((tag) => <span key={tag} className="rounded-full border border-[#ded3c4] px-2.5 py-1 text-xs font-medium text-[#74685f]">{tag}</span>)}
+            {category && <span className="rounded-full bg-[#e5e9df] px-2.5 py-1 text-xs font-semibold text-[#7b2d32] shadow-[inset_2px_2px_4px_rgba(97,85,68,0.1),inset_-2px_-2px_4px_rgba(255,255,250,0.75)]">{category}</span>}
+            {tags.map((tag) => <span key={tag} className="rounded-full border border-white/50 px-2.5 py-1 text-xs font-medium text-[#74685f] shadow-[inset_2px_2px_4px_rgba(97,85,68,0.08),inset_-2px_-2px_4px_rgba(255,255,250,0.7)]">{tag}</span>)}
           </div>
         )}
         <div className="flex items-start justify-between gap-3">

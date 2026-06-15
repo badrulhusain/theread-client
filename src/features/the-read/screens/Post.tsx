@@ -15,9 +15,10 @@ const renderBlock = (block: ContentBlock, i: number) => {
     <h2 key={i} className="tr-serif" style={{ margin: '32px 0 16px', fontSize: 26, fontWeight: 500, color: 'var(--ink)', letterSpacing: '-0.01em' }}>{block.text}</h2>
   );
   if (block.type === 'pull') return (
-    <aside key={i} style={{
+    <aside key={i} className="neu-row-soft" style={{
       margin: '28px -10px', padding: '20px 28px',
       borderLeft: '3px solid var(--burgundy)',
+      borderRadius: 16,
       fontFamily: "'Fraunces',serif", fontStyle: 'italic',
       fontSize: 22, lineHeight: 1.45, color: 'var(--burgundy)',
       fontWeight: 400, letterSpacing: '-0.01em',
@@ -140,7 +141,7 @@ const CommentRow: React.FC<{
 
   return (
     <div style={{ marginLeft: depth > 0 ? 36 : 0 }}>
-      <div style={{ display: 'flex', gap: 12, padding: '14px 0', borderBottom: depth === 0 ? '1px solid var(--line)' : 'none' }}>
+      <div className={depth === 0 ? 'neu-row-soft' : ''} style={{ display: 'flex', gap: 12, padding: depth === 0 ? '14px' : '14px 0', borderRadius: depth === 0 ? 14 : undefined, marginBottom: depth === 0 ? 10 : 0 }}>
         <Avatar user={author} size={36} />
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 4 }}>
@@ -171,10 +172,11 @@ const CommentRow: React.FC<{
                 value={editText}
                 onChange={e => setEditText(e.target.value)}
                 style={{
-                  width: '100%', border: '1px solid var(--line)', borderRadius: 8,
+                  width: '100%', border: 'none', borderRadius: 12,
                   padding: '8px 10px', background: 'var(--paper)',
                   fontFamily: "'Fraunces',serif", fontSize: 15, color: 'var(--ink)',
                   minHeight: 60, resize: 'none', lineHeight: 1.5, outline: 'none',
+                  boxShadow: 'inset 4px 4px 8px rgba(97,85,68,.14), inset -4px -4px 8px rgba(255,255,250,.8)',
                 }}
               />
               <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
@@ -328,7 +330,7 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
         height: 320, borderRadius: 16, background: post.cover,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#fbf8f2', fontSize: 120, fontFamily: "'Fraunces',serif",
-        marginBottom: 40, boxShadow: '8px 8px 24px var(--sh-hi)',
+        marginBottom: 40, boxShadow: '14px 14px 28px var(--sh-hi), -8px -8px 18px rgba(255,255,250,.52)',
       }}>
         <div style={{ opacity: .4 }}>{post.coverAccent}</div>
       </div>
@@ -412,7 +414,7 @@ export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Au
 
   return (
     <div style={{ padding: '14px 18px 90px' }}>
-      <button onClick={() => nav('feed')} className="neu-flat" style={{
+      <button onClick={() => nav('feed')} className="neu-flat neu-press" style={{
         border: 'none', padding: '6px 12px', borderRadius: 999,
         display: 'inline-flex', alignItems: 'center', gap: 6,
         fontSize: 12, color: 'var(--ink-2)', marginBottom: 18, fontFamily: 'Inter,sans-serif', background: 'var(--paper)',
@@ -439,6 +441,7 @@ export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Au
         height: 180, borderRadius: 14, background: post.cover,
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: '#fbf8f2', fontSize: 68, fontFamily: "'Fraunces',serif", marginBottom: 22,
+        boxShadow: '10px 10px 22px var(--sh-hi), -5px -5px 14px rgba(255,255,250,.42)',
       }}>
         <div style={{ opacity: .4 }}>{post.coverAccent}</div>
       </div>
@@ -446,7 +449,7 @@ export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Au
         {(post.content.length > 0 ? post.content : [{ type: 'p' as const, text: post.excerpt }]).map((b, i) => {
           if (b.type === 'p') return <p key={i} className="tr-serif" style={{ margin: '0 0 14px', fontSize: 15, lineHeight: 1.7, color: 'var(--ink)' }}>{b.text}</p>;
           if (b.type === 'h2') return <h2 key={i} className="tr-serif" style={{ margin: '20px 0 10px', fontSize: 19, fontWeight: 500 }}>{b.text}</h2>;
-          if (b.type === 'pull') return <aside key={i} style={{ margin: '16px 0', padding: '12px 16px', borderLeft: '3px solid var(--burgundy)', fontFamily: "'Fraunces',serif", fontStyle: 'italic', fontSize: 17, color: 'var(--burgundy)', lineHeight: 1.4 }}>{b.text}</aside>;
+          if (b.type === 'pull') return <aside key={i} className="neu-row-soft" style={{ margin: '16px 0', padding: '12px 16px', borderLeft: '3px solid var(--burgundy)', borderRadius: 14, fontFamily: "'Fraunces',serif", fontStyle: 'italic', fontSize: 17, color: 'var(--burgundy)', lineHeight: 1.4 }}>{b.text}</aside>;
           return null;
         })}
       </article>

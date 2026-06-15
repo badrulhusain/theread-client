@@ -16,7 +16,7 @@ const GreetingHero: React.FC<{ user: Author; compact?: boolean; nav?: (r: any) =
       padding: compact ? 20 : '28px 32px',
       position: 'relative',
       overflow: 'hidden',
-      background: 'linear-gradient(135deg, var(--paper), var(--paper-2))',
+    background: 'linear-gradient(135deg, #f6f7f2, var(--paper-2))',
     }}>
       <div className="tr-serif" style={{
         position: 'absolute', right: -20, bottom: -30,
@@ -91,7 +91,7 @@ const FeaturedPostCard: React.FC<{ post: Post; onOpen: (p: Post) => void }> = ({
 
 // ── Recent post row ───────────────────────────────────────────────────────────
 const RecentPostRow: React.FC<{ post: Post; onOpen: (p: Post) => void; rank: number }> = ({ post, onOpen, rank }) => (
-  <div onClick={() => onOpen(post)} style={{ display: 'flex', gap: 12, padding: '10px 0', alignItems: 'flex-start', borderBottom: rank < 3 ? '1px solid var(--line)' : 'none', cursor: 'pointer' }}>
+  <div className="neu-row hover-lift" onClick={() => onOpen(post)} style={{ display: 'flex', gap: 12, padding: '11px 12px', alignItems: 'flex-start', borderRadius: 14, cursor: 'pointer', marginBottom: rank < 4 ? 8 : 0 }}>
     <div className="tr-serif" style={{ fontSize: 26, fontWeight: 500, color: 'var(--tan-2)', lineHeight: 1, fontStyle: 'italic', width: 26 }}>{rank}</div>
     <div style={{ flex: 1 }}>
       <div className="tr-serif" style={{ fontSize: 14, fontWeight: 600, color: 'var(--ink)', lineHeight: 1.3, marginBottom: 2 }}>{post.title}</div>
@@ -175,11 +175,10 @@ export const DashboardDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) 
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
             {SCHEDULE_TODAY.map((s, i) => (
-              <div key={i} style={{
+              <div key={i} className={s.highlight ? 'neu-row' : 'neu-row-soft'} style={{
                 display: 'flex', gap: 14, alignItems: 'center',
                 padding: '11px 14px', borderRadius: 12,
-                background: s.highlight ? 'var(--accent-soft)' : 'transparent',
-                border: s.highlight ? '1px solid rgba(122,46,46,.25)' : '1px solid transparent',
+                background: s.highlight ? 'var(--accent-soft)' : undefined,
               }}>
                 <div className="tr-mono" style={{ fontSize: 13, fontWeight: 600, color: s.highlight ? 'var(--burgundy)' : 'var(--ink-2)', minWidth: 44 }}>{s.time}</div>
                 <div style={{ width: 1, height: 28, background: s.highlight ? 'var(--burgundy)' : 'var(--line)' }} />
@@ -195,7 +194,7 @@ export const DashboardDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) 
         <NeuCard>
           <SectionHeading eyebrow="Campus · Editorial" title="Announcements" />
           {ANNOUNCEMENTS.map(a => (
-            <div key={a.id} style={{ display: 'flex', gap: 14, padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
+            <div key={a.id} className="neu-row-soft" style={{ display: 'flex', gap: 14, padding: '14px', borderRadius: 14, marginBottom: 10 }}>
               <div className="neu-flat" style={{ width: 40, height: 40, flexShrink: 0, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--burgundy)' }}>
                 <Icon name={a.pinned ? 'pin' : a.kind === 'Event' ? 'sparkle' : a.kind === 'Editorial' ? 'feather' : 'globe'} size={16} />
               </div>
@@ -267,12 +266,11 @@ export const DashboardMobile: React.FC<{ user: Author; nav: (r: any, p?: Post) =
         <SectionHeading eyebrow="Today" title="Schedule" />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {SCHEDULE_TODAY.slice(0, 3).map((s, i) => (
-            <div key={i} style={{
-              display: 'flex', gap: 14, alignItems: 'center',
-              padding: '11px 14px', borderRadius: 12,
-              background: s.highlight ? 'var(--accent-soft)' : 'transparent',
-              border: s.highlight ? '1px solid rgba(122,46,46,.25)' : '1px solid transparent',
-            }}>
+              <div key={i} className={s.highlight ? 'neu-row' : 'neu-row-soft'} style={{
+                display: 'flex', gap: 14, alignItems: 'center',
+                padding: '11px 14px', borderRadius: 12,
+                background: s.highlight ? 'var(--accent-soft)' : undefined,
+              }}>
               <div className="tr-mono" style={{ fontSize: 13, fontWeight: 600, color: s.highlight ? 'var(--burgundy)' : 'var(--ink-2)', minWidth: 44 }}>{s.time}</div>
               <div style={{ width: 1, height: 28, background: s.highlight ? 'var(--burgundy)' : 'var(--line)' }} />
               <div>

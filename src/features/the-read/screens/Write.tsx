@@ -14,8 +14,8 @@ const ComposeToolbar: React.FC = () => (
       { icon: 'image' },
       { icon: 'tag' },
     ].map((t, i) => (
-      <button key={i} className="neu-press" style={{
-        width: 34, height: 34, border: 'none', background: 'transparent',
+      <button key={i} className="neu-flat neu-press" style={{
+        width: 34, height: 34, border: 'none', background: 'var(--paper)',
         borderRadius: 8, cursor: 'pointer',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         color: 'var(--ink-2)',
@@ -172,7 +172,7 @@ export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void; editP
               color: 'var(--ink)', minHeight: 360, resize: 'vertical',
             }}
           />
-          <div style={{ display: 'flex', gap: 12, color: 'var(--ink-3)', fontSize: 12, marginTop: 12, borderTop: '1px solid var(--line)', paddingTop: 12 }}>
+          <div className="neu-row-soft" style={{ display: 'flex', gap: 12, color: 'var(--ink-3)', fontSize: 12, marginTop: 12, borderRadius: 12, padding: '10px 12px' }}>
             <span>{wordCount} words</span>
             <span>· ~{Math.max(1, Math.round(wordCount / 200))} min read</span>
           </div>
@@ -269,9 +269,10 @@ export const WriteDesktop: React.FC<{ user: Author; nav: (r: any) => void; editP
                 onKeyDown={e => { if (e.key === 'Enter') handleAddTag(); if (e.key === 'Escape') { setAddingTag(false); setNewTagName(''); } }}
                 placeholder="Tag name…"
                 style={{
-                  flex: 1, border: '1px solid var(--line)', borderRadius: 999,
+                  flex: 1, border: 'none', borderRadius: 999,
                   padding: '5px 10px', fontSize: 12, fontFamily: 'Inter,sans-serif',
                   background: 'var(--paper)', color: 'var(--ink)', outline: 'none',
+                  boxShadow: 'inset 4px 4px 8px rgba(97,85,68,.14), inset -4px -4px 8px rgba(255,255,250,.78)',
                 }}
               />
               <button onClick={handleAddTag} className="neu-flat neu-press" style={{
@@ -390,7 +391,7 @@ export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void; editPo
   return (
     <div style={{ padding: '14px 16px 90px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-        <button onClick={() => nav('feed')} className="neu-flat" style={{
+        <button onClick={() => nav('feed')} className="neu-flat neu-press" style={{
           border: 'none', padding: '6px 12px', borderRadius: 999,
           display: 'inline-flex', alignItems: 'center', gap: 6,
           fontSize: 12, color: 'var(--ink-2)', fontFamily: 'Inter,sans-serif', background: 'var(--paper)',
@@ -411,7 +412,8 @@ export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void; editPo
         style={{
           height: 80, borderRadius: 12, marginBottom: 14, overflow: 'hidden',
           background: coverImage ? 'none' : 'var(--paper)',
-          border: coverImage ? 'none' : '1px dashed var(--line)',
+          border: coverImage ? 'none' : '1px solid rgba(255,255,250,.58)',
+          boxShadow: coverImage ? '10px 10px 22px var(--sh-hi), -5px -5px 14px rgba(255,255,250,.42)' : 'inset 6px 6px 12px rgba(97,85,68,.14), inset -6px -6px 12px rgba(255,255,250,.82)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           gap: 6, color: 'var(--ink-3)', cursor: uploadingCover ? 'wait' : 'pointer',
           position: 'relative',
@@ -470,9 +472,10 @@ export const WriteMobile: React.FC<{ user: Author; nav: (r: any) => void; editPo
               onKeyDown={e => { if (e.key === 'Enter') handleAddTag(); if (e.key === 'Escape') { setAddingTag(false); setNewTagName(''); } }}
               placeholder="Tag name…"
               style={{
-                border: '1px solid var(--line)', borderRadius: 999,
+                border: 'none', borderRadius: 999,
                 padding: '5px 10px', fontSize: 11, fontFamily: 'Inter,sans-serif',
                 background: 'var(--paper)', color: 'var(--ink)', outline: 'none', width: 100,
+                boxShadow: 'inset 4px 4px 8px rgba(97,85,68,.14), inset -4px -4px 8px rgba(255,255,250,.78)',
               }}
             />
             <button onClick={handleAddTag} className="neu-flat" style={{

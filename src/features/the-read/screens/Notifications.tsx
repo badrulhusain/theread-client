@@ -14,12 +14,11 @@ const colorFor = (kind: string) => ({ comment: 'var(--burgundy)', follow: 'var(-
 
 // ── Notification row ──────────────────────────────────────────────────────────
 const NotifRow: React.FC<{ n: Notification }> = ({ n }) => (
-  <div className={n.unread ? 'neu-flat' : ''} style={{
+  <div className={n.unread ? 'neu-row' : 'neu-row-soft'} style={{
     display: 'flex', gap: 12, alignItems: 'flex-start',
     padding: '14px 16px', borderRadius: 14,
-    background: n.unread ? 'var(--accent-soft)' : 'transparent',
+    background: n.unread ? 'var(--accent-soft)' : undefined,
     marginBottom: 8,
-    border: n.unread ? '1px solid rgba(122,46,46,.18)' : '1px solid transparent',
   }}>
     {n.actor ? (
       <Avatar user={n.actor} size={40} />

@@ -38,8 +38,10 @@ const AuthShell: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </div>
 
     {/* Form side */}
-    <div style={{ background: 'var(--paper)', padding: '50px 52px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-      {children}
+    <div className="paper-bg" style={{ background: 'var(--paper)', padding: '50px 52px', display: 'flex', flexDirection: 'column', justifyContent: 'center', boxShadow: 'inset 12px 12px 26px rgba(97,85,68,.1), inset -10px -10px 24px rgba(255,255,250,.58)' }}>
+      <div className="neu neu-ring" style={{ maxWidth: 460, width: '100%', margin: '0 auto', borderRadius: 24, padding: 34 }}>
+        {children}
+      </div>
     </div>
   </div>
 );
@@ -206,7 +208,7 @@ export const LoginMobile: React.FC<LoginProps> = ({ onRegister }) => {
           Sign in to <em style={{ fontWeight: 400, color: 'var(--tan)' }}>The Read</em>
         </h2>
       </div>
-      <div className="paper-bg" style={{ background: 'var(--paper)', borderRadius: 22, padding: 24, marginTop: 'auto', position: 'relative', zIndex: 2 }}>
+      <div className="paper-bg neu neu-ring" style={{ background: 'var(--paper)', borderRadius: 22, padding: 24, marginTop: 'auto', position: 'relative', zIndex: 2 }}>
         <label className="tr-mono" style={{ fontSize: 10, letterSpacing: '.2em', color: 'var(--ink-3)', textTransform: 'uppercase', display: 'block', marginBottom: 8 }}>Email</label>
         <NeuInput icon="mail" value={email} onChange={setEmail} placeholder="you@ashworth.edu" />
         <div style={{ height: 12 }} />

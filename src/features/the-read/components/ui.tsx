@@ -14,8 +14,8 @@ export const Avatar: React.FC<AvatarProps> = ({ user, size = 40, ring = false })
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       fontFamily: "'Fraunces',serif", fontWeight: 600, fontSize: size * 0.38,
       boxShadow: ring
-        ? '0 0 0 2px var(--paper), 0 0 0 4px var(--tan), 2px 2px 6px var(--sh-hi)'
-        : '2px 2px 6px var(--sh-hi), -2px -2px 6px var(--sh-lo)',
+        ? '0 0 0 3px var(--paper), 0 0 0 6px rgba(200,155,96,.55), 8px 8px 16px var(--sh-hi), -5px -5px 12px var(--sh-lo)'
+        : '5px 5px 12px var(--sh-hi), -4px -4px 10px var(--sh-lo)',
       flexShrink: 0,
     }}>
       {user.initials}
@@ -31,6 +31,7 @@ export const Pill: React.FC<PillProps> = ({ children, color, soft = true, small 
     color: soft ? (color ?? 'var(--accent)') : '#fbf8f2',
     padding: small ? '3px 8px' : '5px 11px',
     fontSize: small ? 9 : 10,
+    boxShadow: soft ? 'inset 1px 1px 2px rgba(97,85,68,.12), inset -1px -1px 2px rgba(255,255,250,.75)' : '3px 3px 8px rgba(97,85,68,.16)',
   }}>
     {children}
   </span>
@@ -64,7 +65,7 @@ export const NeuButton: React.FC<NeuButtonProps> = ({
       fontSize: small ? 13 : 14, fontWeight: 600,
       fontFamily: 'Inter,sans-serif',
       boxShadow: primary
-        ? '4px 4px 10px rgba(122,46,46,.4), -2px -2px 8px var(--sh-lo), inset 1px 1px 1px rgba(255,255,255,.15)'
+        ? '7px 7px 16px rgba(92,40,40,.34), -4px -4px 12px var(--sh-lo), inset 1px 1px 1px rgba(255,255,255,.22), inset -2px -2px 4px rgba(60,16,18,.26)'
         : undefined,
       ...style,
     }}
@@ -84,7 +85,7 @@ interface NeuInputProps {
   style?: React.CSSProperties;
 }
 export const NeuInput: React.FC<NeuInputProps> = ({ value, onChange, placeholder, type = 'text', icon, style = {} }) => (
-  <div className="neu-inset" style={{
+  <div className="neu-inset neu-focus" style={{
     display: 'flex', alignItems: 'center', gap: 10,
     padding: '12px 16px',
     borderRadius: 'calc(var(--radius) * 0.7)',
@@ -99,6 +100,7 @@ export const NeuInput: React.FC<NeuInputProps> = ({ value, onChange, placeholder
       style={{
         border: 'none', outline: 'none', background: 'transparent',
         fontSize: 14, color: 'var(--ink)', flex: 1,
+        minWidth: 0,
         fontFamily: 'Inter, sans-serif',
       }}
     />
@@ -115,7 +117,7 @@ interface NeuCardProps {
 }
 export const NeuCard: React.FC<NeuCardProps> = ({ children, style = {}, inset = false, padded = true, onClick }) => (
   <div
-    className={inset ? 'neu-inset' : 'neu'}
+    className={inset ? 'neu-inset' : 'neu neu-ring'}
     onClick={onClick}
     style={{
       borderRadius: 'var(--radius)',
@@ -177,7 +179,7 @@ export const Logo: React.FC<LogoProps> = ({ size = 36, showName = true, variant 
         color: '#f5f1ea',
         fontFamily: "'Fraunces',serif", fontStyle: 'italic', fontWeight: 700,
         fontSize: size * 0.55,
-        boxShadow: '2px 2px 6px var(--sh-hi), inset 1px 1px 0 rgba(255,255,255,.15)',
+        boxShadow: '6px 6px 14px rgba(58,32,24,.32), -3px -3px 8px rgba(255,255,250,.4), inset 1px 1px 0 rgba(255,255,255,.18)',
         paddingTop: 2,
       }}>R</div>
       {showName && (
@@ -199,11 +201,11 @@ interface NavItemProps { icon: string; label: string; active?: boolean; onClick?
 export const NavItem: React.FC<NavItemProps> = ({ icon, label, active, onClick, badge }) => (
   <button
     onClick={onClick}
-    className={active ? 'neu-inset' : 'neu-press'}
+    className={active ? 'neu-inset' : 'neu-flat neu-press'}
     style={{
       display: 'flex', alignItems: 'center', gap: 12,
       padding: '11px 14px', width: '100%',
-      border: 'none', background: active ? 'var(--paper)' : 'transparent',
+      border: 'none', background: active ? 'var(--paper)' : 'var(--paper-2)',
       borderRadius: 'calc(var(--radius) * 0.6)',
       color: active ? 'var(--burgundy)' : 'var(--ink-2)',
       fontSize: 14, fontWeight: active ? 600 : 500,
@@ -237,6 +239,7 @@ export const TabBarItem: React.FC<TabBarItemProps> = ({ icon, label, active, onC
     <div className={active ? 'neu-inset' : ''} style={{
       width: 40, height: 32, borderRadius: 12,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
+      background: active ? 'var(--paper)' : 'transparent',
     }}>
       <Icon name={icon} size={18} stroke={active ? 'var(--burgundy)' : 'var(--ink-3)'} />
     </div>

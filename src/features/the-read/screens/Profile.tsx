@@ -42,7 +42,7 @@ const ProfileHeader: React.FC<{ user: Author; compact?: boolean; nav?: (r: any) 
 
 // ── Stat tile ──────────────────────────────��──────────────────────────────────
 const StatTile: React.FC<{ label: string; value: string | number; sub?: string }> = ({ label, value, sub }) => (
-  <div className="neu-inset" style={{ padding: '18px 20px', borderRadius: 'calc(var(--radius) * 0.8)', textAlign: 'center' }}>
+  <div className="neu-flat" style={{ padding: '18px 20px', borderRadius: 'calc(var(--radius) * 0.8)', textAlign: 'center' }}>
     <div className="tr-serif" style={{ fontSize: 34, fontWeight: 600, color: 'var(--burgundy)', lineHeight: 1 }}>{value}</div>
     {sub && <div style={{ fontSize: 11, color: 'var(--ink-3)', marginTop: 2 }}>{sub}</div>}
     <div className="tr-mono" style={{ fontSize: 9, letterSpacing: '.2em', color: 'var(--tan-2)', textTransform: 'uppercase', marginTop: 6 }}>{label}</div>
@@ -72,11 +72,13 @@ const PostRow: React.FC<{
   };
 
   return (
-    <div onClick={() => onOpen(post)} style={{
+    <div className="neu-row hover-lift" onClick={() => onOpen(post)} style={{
       display: 'flex', gap: compact ? 12 : 16,
-      padding: `${compact ? 14 : 18}px 0`,
-      borderBottom: '1px solid var(--line)', cursor: 'pointer',
-    }} className="hover-lift">
+      padding: compact ? '13px 14px' : '16px 18px',
+      borderRadius: compact ? 14 : 16,
+      cursor: 'pointer',
+      marginBottom: compact ? 10 : 12,
+    }}>
       <div style={{
         width: compact ? 60 : 72, height: compact ? 60 : 72, borderRadius: compact ? 8 : 10,
         background: post.cover,
@@ -154,7 +156,7 @@ export const ProfileDesktop: React.FC<{ user: Author; nav: (r: any, p?: Post) =>
           <SectionHeading eyebrow="Published" title="Essays" />
           {loading ? (
             [1, 2, 3].map(i => (
-              <div key={i} style={{ display: 'flex', gap: 16, padding: '18px 0', borderBottom: '1px solid var(--line)' }}>
+          <div key={i} className="neu-row-soft" style={{ display: 'flex', gap: 16, padding: '16px 18px', borderRadius: 16, marginBottom: 12 }}>
                 <div className="neu-inset" style={{ width: 72, height: 72, borderRadius: 10 }} />
                 <div style={{ flex: 1 }}>
                   <div className="neu-inset" style={{ height: 14, width: '70%', borderRadius: 6, marginBottom: 8 }} />
@@ -217,7 +219,7 @@ export const ProfileMobile: React.FC<{ user: Author; nav: (r: any, p?: Post) => 
       <SectionHeading eyebrow="Published" title="Essays" />
       {loading ? (
         [1, 2].map(i => (
-          <div key={i} style={{ display: 'flex', gap: 12, padding: '14px 0', borderBottom: '1px solid var(--line)' }}>
+          <div key={i} className="neu-row-soft" style={{ display: 'flex', gap: 12, padding: '13px 14px', borderRadius: 14, marginBottom: 10 }}>
             <div className="neu-inset" style={{ width: 60, height: 60, borderRadius: 8 }} />
             <div style={{ flex: 1 }}>
               <div className="neu-inset" style={{ height: 14, width: '70%', borderRadius: 6, marginBottom: 8 }} />

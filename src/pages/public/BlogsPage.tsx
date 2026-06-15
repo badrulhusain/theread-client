@@ -86,7 +86,7 @@ export default function BlogsPage() {
         </div>
       </div>
       {error && <Card className="mb-4"><CardContent className="text-[#7b2d32]">{error}</CardContent></Card>}
-      {loading ? <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl border border-[#ded3c4] bg-[#fbf7ef]" />)}</div> : blogs.length ? (
+      {loading ? <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{[1, 2, 3, 4, 5, 6].map((item) => <div key={item} className="h-72 animate-pulse rounded-2xl border border-white/60 bg-[#eef0e9] shadow-[inset_8px_8px_16px_rgba(97,85,68,0.12),inset_-8px_-8px_16px_rgba(255,255,250,0.82)]" />)}</div> : blogs.length ? (
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">{blogs.map((blog, index) => <BlogCard key={blog.id} blog={blog} featured={index === 0} />)}</div>
       ) : (
         <Card><CardContent className="text-[#74685f]">No published blogs match these filters.</CardContent></Card>

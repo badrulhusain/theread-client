@@ -28,13 +28,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ route, go, user, onLogout }) =
     <div style={{ flex: 1 }} />
 
     {/* User footer */}
-    <div className="neu-flat" style={{ padding: 10, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10 }}>
+    <div className="neu-flat" style={{ padding: 10, borderRadius: 14, display: 'flex', alignItems: 'center', gap: 10, background: 'var(--paper-2)' }}>
       <Avatar user={user} size={36} />
       <div style={{ flex: 1, lineHeight: 1.2, minWidth: 0 }}>
         <div style={{ fontSize: 12.5, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user.name}</div>
         <div style={{ fontSize: 10, color: 'var(--ink-3)' }}>{user.role}</div>
       </div>
-      <button onClick={onLogout} style={{ background: 'none', border: 'none', color: 'var(--ink-3)', cursor: 'pointer' }}>
+      <button className="neu-inset" onClick={onLogout} style={{ background: 'var(--paper)', border: 'none', color: 'var(--ink-3)', cursor: 'pointer', width: 30, height: 30, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Icon name="logout" size={16} />
       </button>
     </div>
@@ -51,9 +51,12 @@ export const TopBar: React.FC<{ route: RouteKey; onBell?: () => void }> = ({ rou
   <div style={{
     height: 60, padding: '0 24px',
     display: 'flex', alignItems: 'center', gap: 14,
-    borderBottom: '1px solid var(--line)',
-    background: 'var(--paper)',
+    borderBottom: 'none',
+    background: 'linear-gradient(145deg, #f4f6ef, var(--paper))',
+    boxShadow: 'inset 0 -6px 14px rgba(97,85,68,.08), 0 8px 20px rgba(97,85,68,.08)',
     flexShrink: 0,
+    position: 'relative',
+    zIndex: 5,
   }}>
     <div className="tr-mono" style={{ fontSize: 10, letterSpacing: '.25em', color: 'var(--tan-2)', textTransform: 'uppercase' }}>
       {ROUTE_TITLES[route] ?? 'The Read'}
@@ -76,12 +79,16 @@ export const MobileHeader: React.FC<{ user: Author }> = ({ user }) => (
   <div style={{
     height: 56, padding: '0 16px',
     display: 'flex', alignItems: 'center', gap: 10,
-    background: 'var(--paper)', borderBottom: '1px solid var(--line)',
+    background: 'linear-gradient(145deg, #f4f6ef, var(--paper))',
+    borderBottom: 'none',
+    boxShadow: '0 8px 20px rgba(97,85,68,.1)',
     flexShrink: 0,
+    position: 'relative',
+    zIndex: 5,
   }}>
     <Logo size={28} showName />
     <div style={{ flex: 1 }} />
-    <button className="neu-flat" style={{ border: 'none', width: 36, height: 36, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', background: 'var(--paper)' }}>
+    <button className="neu-flat neu-press" style={{ border: 'none', width: 36, height: 36, borderRadius: 11, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', background: 'var(--paper)' }}>
       <Icon name="bell" size={16} />
       <span style={{ position: 'absolute', top: 7, right: 7, width: 6, height: 6, background: 'var(--burgundy)', borderRadius: 999 }} />
     </button>
