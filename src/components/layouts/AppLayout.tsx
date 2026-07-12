@@ -8,6 +8,7 @@ import { useAuth } from '@/store/authStore';
 export function AppLayout() {
   const { user, logout } = useAuth();
   const isStaff = user?.role === 'EDITOR' || user?.role === 'ADMIN';
+  const canWrite = isStaff;
 
   return (
     <div className="min-h-screen bg-[#eef0e9] text-[#231b17]">
@@ -28,7 +29,7 @@ export function AppLayout() {
           <div className="ml-auto flex items-center gap-2">
             {user ? (
               <>
-                {!isStaff && <Button asChild size="sm"><Link to="/write"><UploadCloud className="h-4 w-4" /> Submit blog</Link></Button>}
+                {canWrite && <Button asChild size="sm"><Link to="/write"><UploadCloud className="h-4 w-4" /> Submit blog</Link></Button>}
                 <button className="hidden h-10 w-10 items-center justify-center rounded-xl border border-white/60 bg-[#eef0e9] text-[#5c4b3d] shadow-[6px_6px_14px_rgba(97,85,68,0.15),-5px_-5px_12px_rgba(255,255,250,0.8)] sm:flex" type="button" aria-label="Notifications">
                   <Bell className="h-4 w-4" />
                 </button>
@@ -53,7 +54,7 @@ export function AppLayout() {
       <nav className="fixed inset-x-3 bottom-3 z-40 flex rounded-2xl border border-white/60 bg-[#eef0e9]/95 p-2 shadow-[10px_10px_24px_rgba(97,85,68,0.2),-6px_-6px_16px_rgba(255,255,250,0.84)] backdrop-blur md:hidden">
         <MobileNavLink to="/" label="Home" icon={<Home className="h-4 w-4" />} />
         <MobileNavLink to="/blogs" label="Feed" icon={<BookOpen className="h-4 w-4" />} />
-        {!isStaff && <MobileNavLink to="/write" label="Submit" icon={<UploadCloud className="h-4 w-4" />} />}
+        {canWrite && <MobileNavLink to="/write" label="Submit" icon={<UploadCloud className="h-4 w-4" />} />}
         {isStaff && <MobileNavLink to="/editor/submissions" label="Editor" icon={<UserCog className="h-4 w-4" />} />}
         {user?.role === 'ADMIN' && <MobileNavLink to="/admin" label="Admin" icon={<Shield className="h-4 w-4" />} />}
       </nav>

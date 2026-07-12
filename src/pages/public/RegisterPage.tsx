@@ -36,7 +36,7 @@ export default function RegisterPage() {
         <CardHeader>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#a9793d]">Join the journal</p>
           <h1 className="mt-1 font-serif text-3xl font-semibold text-[#231b17]">Register</h1>
-          <p className="text-sm text-[#74685f]">Create a reader/writer account.</p>
+          <p className="text-sm text-[#74685f]">Create a reader account.</p>
         </CardHeader>
         <CardContent>
           <form className="space-y-4" onSubmit={onSubmit}>

@@ -40,7 +40,6 @@ export default function AdminDashboardPage() {
       {error && <RetryMessage message={error} onRetry={loadDashboard} />}
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <Stat label="Users" value={count(stats.users, stats.totalUsers)} loading={loading} />
-        <Stat label="Authors" value={count(stats.authors, stats.totalAuthors)} loading={loading} />
         <Stat label="Editors" value={count(stats.editors, stats.totalEditors)} loading={loading} />
         <Stat label="Admins" value={count(stats.admins, stats.totalAdmins)} loading={loading} />
         <Stat label="Total blogs" value={count(stats.totalBlogs)} loading={loading} />

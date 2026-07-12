@@ -93,7 +93,6 @@ export default function ManageUsersPage() {
                     <td>{user.role}</td>
                     <td>{deleted ? 'Deleted' : blocked ? 'Blocked' : 'Active'}</td>
                     <td className="flex flex-wrap gap-2 py-2">
-                      <Button size="sm" variant="outline" disabled={user.role === 'AUTHOR' || deleted || processingId === user.id} onClick={() => void action('Promoted to author.', user.id, () => adminService.promoteToAuthor(user.id))}>Promote</Button>
                       {blocked ? (
                         <Button size="sm" disabled={deleted || processingId === user.id} onClick={() => void action('User unblocked.', user.id, () => adminService.unblockUser(user.id))}>Unblock</Button>
                       ) : (

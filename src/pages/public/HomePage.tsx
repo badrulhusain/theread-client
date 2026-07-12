@@ -83,7 +83,7 @@ export default function HomePage() {
           <Card><CardContent className="space-y-3 text-[#74685f]"><div className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> No published blogs yet.</div><p>Once editors approve and admins publish articles, they will appear here.</p><Button asChild><Link to="/blogs">Browse blogs</Link></Button></CardContent></Card>
         )}
       </section>
-      <section className="mx-auto max-w-7xl px-4 pb-10 md:px-8">
+      {(user?.role === 'EDITOR' || user?.role === 'ADMIN') && <section className="mx-auto max-w-7xl px-4 pb-10 md:px-8">
         <div className="flex flex-col gap-4 rounded-2xl border border-white/60 bg-[#eef0e9] p-5 shadow-[12px_12px_26px_rgba(97,85,68,0.16),-9px_-9px_22px_rgba(255,255,250,0.84)] md:flex-row md:items-center md:justify-between md:p-6">
           <div>
             <h2 className="font-serif text-2xl font-semibold text-[#231b17]">Interested in writing?</h2>
@@ -91,7 +91,7 @@ export default function HomePage() {
           </div>
           <Button asChild><Link to="/write"><UploadCloud className="h-4 w-4" /> Upload a blog</Link></Button>
         </div>
-      </section>
+      </section>}
       {categories.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8">
           <h2 className="mb-3 font-serif text-2xl font-semibold text-[#231b17]">Categories</h2>
@@ -105,9 +105,9 @@ export default function HomePage() {
 }
 
 function secondaryCta(role?: string) {
-  if (role === 'EDITOR') return { to: '/editor', label: 'Go to editorial desk' };
-  if (role === 'ADMIN') return { to: '/admin', label: 'Go to admin dashboard' };
-    return { to: '/write', label: 'Write a blog' };
+  if (role === 'EDITOR' || role === 'ADMIN') return { to: '/write', label: 'Write a blog' };
+  if (role === 'USER') return { to: '/profile', label: 'View your profile' };
+  return { to: '/register', label: 'Join The Read' };
 }
 
 function LatestBlog({ blog }: { blog: Blog }) {

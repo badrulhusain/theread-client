@@ -10,11 +10,7 @@ const BlogsPage = lazy(() => import('@/pages/public/BlogsPage'));
 const BlogDetailPage = lazy(() => import('@/pages/public/BlogDetailPage'));
 const LoginPage = lazy(() => import('@/pages/public/LoginPage'));
 const RegisterPage = lazy(() => import('@/pages/public/RegisterPage'));
-const UserLayout = lazy(() => import('@/pages/user/UserLayout'));
-const DashboardPage = lazy(() => import('@/pages/user/DashboardPage'));
 const BlogFormPage = lazy(() => import('@/pages/user/BlogFormPage'));
-const MyBlogsPage = lazy(() => import('@/pages/user/MyBlogsPage'));
-const BlogStatusPage = lazy(() => import('@/pages/user/BlogStatusPage'));
 const ProfilePage = lazy(() => import('@/pages/user/ProfilePage'));
 const EditorLayout = lazy(() => import('@/pages/editor/EditorLayout'));
 const EditorDashboardPage = lazy(() => import('@/pages/editor/EditorDashboardPage'));
@@ -53,17 +49,7 @@ export const router = createBrowserRouter([
       {
         element: <PrivateRoute />,
         children: [
-          {
-            element: <UserLayout />,
-            children: [
-              { path: 'dashboard', element: <DashboardPage /> },
-              { path: 'write', element: <BlogFormPage /> },
-              { path: 'my-blogs', element: <MyBlogsPage /> },
-              { path: 'my-blogs/:id', element: <BlogStatusPage /> },
-              { path: 'my-blogs/:id/edit', element: <BlogFormPage /> },
-              { path: 'profile', element: <ProfilePage /> },
-            ],
-          },
+          { path: 'profile', element: <ProfilePage /> },
         ],
       },
       {
@@ -72,6 +58,7 @@ export const router = createBrowserRouter([
           {
             element: <EditorLayout />,
             children: [
+              { path: 'write', element: <BlogFormPage /> },
               { path: 'editor', element: <EditorDashboardPage /> },
               { path: 'editor/submissions', element: <SubmittedBlogsPage /> },
               { path: 'editor/blogs/:id/review', element: <ReviewBlogPage /> },

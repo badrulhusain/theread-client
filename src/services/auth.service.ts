@@ -3,7 +3,7 @@ import type { AuthResponse, AuthUser, LoginPayload, RegisterPayload, UserRole } 
 
 export function normalizeRole(role: unknown): UserRole {
   const value = String(role || 'USER').toUpperCase();
-  if (value === 'AUTHOR' || value === 'EDITOR' || value === 'ADMIN') return value;
+  if (value === 'EDITOR' || value === 'ADMIN') return value;
   return 'USER';
 }
 

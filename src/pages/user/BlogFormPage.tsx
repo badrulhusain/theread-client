@@ -117,11 +117,10 @@ export default function BlogFormPage() {
       if (submitForReview) {
         await blogService.submit(saved.id);
         toast.success('Submitted for review.');
-        navigate(`/my-blogs/${saved.id}`);
       } else {
         toast.success('Draft saved.');
-        navigate(id ? `/my-blogs/${saved.id}` : '/my-blogs');
       }
+      navigate('/editor');
     } catch (error) {
       toast.error(apiMessage(error, 'Could not save this blog.'));
     } finally {
@@ -194,7 +193,7 @@ export default function BlogFormPage() {
             <div className="flex flex-wrap gap-2">
               <Button type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save draft'}</Button>
               <Button type="button" variant="outline" disabled={submitting} onClick={() => void save(true)}>{submitting ? 'Submitting...' : 'Submit for review'}</Button>
-              {id && <Button asChild type="button" variant="ghost"><Link to={`/my-blogs/${id}`}>Cancel</Link></Button>}
+              {id && <Button asChild type="button" variant="ghost"><Link to="/editor">Cancel</Link></Button>}
             </div>
           </div>
         </form>

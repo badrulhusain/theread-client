@@ -40,7 +40,7 @@ export default function ProfilePage() {
     <Card>
       <CardHeader>
         <h2 className="font-serif text-3xl font-semibold text-[#231b17]">Profile</h2>
-        <p className="text-sm text-[#74685f]">Keep your public author identity current.</p>
+        <p className="text-sm text-[#74685f]">Keep your profile information current.</p>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="grid gap-4 md:grid-cols-[220px_1fr] md:items-start">

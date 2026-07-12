@@ -8,9 +8,11 @@ import { Select } from '@/components/ui/select';
 import { Pagination } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { blogService, taxonomyService } from '@/services/blog.service';
+import { useAuth } from '@/store/authStore';
 import type { Blog, BlogCategory, BlogTag } from '@/types/blog';
 
 export default function BlogsPage() {
+  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -68,7 +70,7 @@ export default function BlogsPage() {
             <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-[#231b17] md:text-5xl">Published blogs</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#74685f]">Browse essays, dispatches, and reflections from The Read community.</p>
           </div>
-          <Button asChild variant="outline"><Link to="/write"><UploadCloud className="h-4 w-4" /> Upload a blog</Link></Button>
+          {(user?.role === 'EDITOR' || user?.role === 'ADMIN') && <Button asChild variant="outline"><Link to="/write"><UploadCloud className="h-4 w-4" /> Write a blog</Link></Button>}
         </div>
         <div className="grid gap-3 md:grid-cols-[1fr_220px_220px]">
           <div className="relative">

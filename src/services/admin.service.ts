@@ -25,11 +25,6 @@ export const adminService = {
     return unwrapList<User>(data);
   },
 
-  async promoteToAuthor(id: string) {
-    const { data } = await api.patch<User>(`/admin/users/${id}/promote-author`);
-    return unwrapData<User>(data);
-  },
-
   async blockUser(id: string) {
     const { data } = await api.patch<User>(`/admin/users/${id}/block`);
     return unwrapData<User>(data);
