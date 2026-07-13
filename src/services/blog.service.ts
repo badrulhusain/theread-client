@@ -3,7 +3,7 @@ import { normalizeBlog } from '@/lib/blog-status';
 import { categoryService } from '@/services/category.service';
 import { tagService } from '@/services/tag.service';
 import type { QueryParams } from '@/types/api';
-import type { Blog, BlogCategory, BlogFormPayload, BlogTag, DashboardSummary } from '@/types/blog';
+import type { ArticleSeries, Blog, BlogCategory, BlogFormPayload, BlogTag, Contributor, DashboardSummary, ReactionType } from '@/types/blog';
 
 function normalizeSummary(payload: DashboardSummary) {
   return {
@@ -75,6 +75,20 @@ export const blogService = {
     const { data } = await api.post<Blog>(`/blogs/${id}/submit`);
     return normalizeBlog(unwrapData<Blog>(data));
   },
+
+  async featured() { const { data } = await api.get('/blogs/featured'); return unwrapList<Blog>(data).items.map(normalizeBlog); },
+  async trending() { const { data } = await api.get('/blogs/trending'); return unwrapList<Blog>(data).items.map(normalizeBlog); },
+  async series() { const { data } = await api.get('/series'); return unwrapList<ArticleSeries>(data).items; },
+  async getSeries(slug: string) { const { data } = await api.get(`/series/${slug}`); return unwrapData<ArticleSeries>(data); },
+  async contributors() { const { data } = await api.get('/contributors'); return unwrapList<Contributor>(data).items; },
+  async getContributor(slug: string) { const { data } = await api.get(`/contributors/${slug}`); return unwrapData<Contributor & { articles?: Blog[] }>(data); },
+  async saved() { const { data } = await api.get('/reader/saved'); return unwrapList<Blog>(data).items.map(normalizeBlog); },
+  async history() { const { data } = await api.get('/reader/history'); return unwrapList<Blog>(data).items.map(normalizeBlog); },
+  async save(id: string) { const { data } = await api.post(`/reader/saved/${id}`); return unwrapData<{ saved: boolean }>(data); },
+  async unsave(id: string) { await api.delete(`/reader/saved/${id}`); return { saved: false }; },
+  async react(id: string, reaction: ReactionType) { const { data } = await api.post(`/blogs/${id}/reactions`, { reaction }); return unwrapData<Partial<Record<ReactionType, number>>>(data); },
+  async recordHistory(id: string) { await api.post(`/reader/history/${id}`); },
+  async newsletter(email: string) { const { data } = await api.post('/newsletter/subscribe', { email }); return unwrapData<{ subscribed: boolean }>(data); },
 };
 
 export const taxonomyService = {

@@ -61,6 +61,7 @@ export function CoverImageManager({
       url: image.url,
       publicId: image.publicId,
       altText: draft?.altText ?? '',
+      caption: draft?.caption ?? '',
       crop: draft?.crop ?? defaultCrop,
     });
     setActiveTab('Adjust');
@@ -206,10 +207,10 @@ export function CoverImageManager({
           {activeTab === 'SEO' && (
             <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
               <div className="space-y-3">
-                <Input value={draft.altText ?? ''} onChange={(event) => setDraft({ ...draft, altText: event.target.value })} placeholder="Cover image alt text" maxLength={160} disabled={disabled || saving} />
+                <Input value={draft.altText ?? ''} onChange={(event) => setDraft({ ...draft, altText: event.target.value })} placeholder="Thumbnail alt text (required for accessibility)" maxLength={160} disabled={disabled || saving} />
+                <Input value={draft.caption ?? ''} onChange={(event) => setDraft({ ...draft, caption: event.target.value })} placeholder="Thumbnail caption or image credit" maxLength={240} disabled={disabled || saving} />
                 <Input value={seoTitle} onChange={(event) => setSeoTitle(event.target.value)} placeholder="SEO title preview" maxLength={70} disabled={disabled || saving} />
                 <Textarea value={seoDescription} onChange={(event) => setSeoDescription(event.target.value)} placeholder="SEO description preview" maxLength={160} disabled={disabled || saving} />
-                <p className="text-xs leading-5 text-[#74685f]">SEO title and description are preview-only here because the current backend edit DTO does not accept those fields.</p>
               </div>
               <PreviewFrame label="Social preview" className="aspect-[1200/630]">
                 <PreviewImage src={draft.url} alt={draft.altText} style={previewStyle} />

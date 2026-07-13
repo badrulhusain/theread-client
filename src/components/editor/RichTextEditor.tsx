@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 import type { ReactNode } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
@@ -20,6 +20,9 @@ import {
   List,
   ListOrdered,
   Minus,
+  Maximize2,
+  Minimize2,
+  RemoveFormatting,
   Quote,
   Redo2,
   Underline as UnderlineIcon,
@@ -36,6 +39,7 @@ interface RichTextEditorProps {
 }
 
 export function RichTextEditor({ value, onChange, placeholder = 'Write the full blog content...', disabled }: RichTextEditorProps) {
+  const [fullscreen, setFullscreen] = useState(false);
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -74,13 +78,18 @@ export function RichTextEditor({ value, onChange, placeholder = 'Write the full 
       editor.chain().focus().extendMarkRange('link').unsetLink().run();
       return;
     }
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url.trim() }).run();
+    const normalized = normalizeLink(url);
+    if (!normalized) {
+      window.alert('Enter a valid http, https, or mailto link.');
+      return;
+    }
+    editor.chain().focus().extendMarkRange('link').setLink({ href: normalized }).run();
   }, [editor]);
 
   const text = editor?.getText() ?? '';
 
   return (
-    <div className="overflow-hidden rounded-xl border border-[#ded3c4] bg-[#fbf7ef] shadow-sm">
+    <div className={cn('overflow-hidden rounded-xl border border-[#ded3c4] bg-[#fbf7ef] shadow-sm', fullscreen && 'fixed inset-0 z-50 flex flex-col rounded-none bg-[#fffaf1]')}>
       <div className="flex flex-wrap gap-1 border-b border-[#ded3c4] bg-[#f4efe6] p-2">
         <ToolButton label="Heading 1" active={editor?.isActive('heading', { level: 1 })} onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}><Heading1 /></ToolButton>
         <ToolButton label="Heading 2" active={editor?.isActive('heading', { level: 2 })} onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}><Heading2 /></ToolButton>
@@ -103,14 +112,27 @@ export function RichTextEditor({ value, onChange, placeholder = 'Write the full 
         <Divider />
         <ToolButton label="Undo" onClick={() => editor?.chain().focus().undo().run()}><Undo2 /></ToolButton>
         <ToolButton label="Redo" onClick={() => editor?.chain().focus().redo().run()}><Redo2 /></ToolButton>
+        <ToolButton label="Clear formatting" onClick={() => editor?.chain().focus().unsetAllMarks().clearNodes().run()}><RemoveFormatting /></ToolButton>
+        <ToolButton label={fullscreen ? 'Exit fullscreen' : 'Fullscreen writing mode'} onClick={() => setFullscreen((current) => !current)}>{fullscreen ? <Minimize2 /> : <Maximize2 />}</ToolButton>
       </div>
-      <EditorContent editor={editor} />
+      <div className={cn(fullscreen && 'min-h-0 flex-1 overflow-y-auto [&_.ProseMirror]:min-h-full')}><EditorContent editor={editor} /></div>
       <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#ded3c4] bg-[#f4efe6] px-4 py-2 text-xs font-medium text-[#74685f]">
         <span>{wordCount(text)} words</span>
         <span>{readingTime(text)}</span>
       </div>
     </div>
   );
+}
+
+function normalizeLink(value: string) {
+  const candidate = value.trim();
+  if (/^[\w.+-]+@[\w.-]+\.[a-z]{2,}$/i.test(candidate)) return `mailto:${candidate}`;
+  try {
+    const url = new URL(candidate);
+    return ['http:', 'https:', 'mailto:'].includes(url.protocol) ? url.toString() : '';
+  } catch {
+    return '';
+  }
 }
 
 function ToolButton({ label, active, onClick, children }: { label: string; active?: boolean; onClick: () => void; children: ReactNode }) {

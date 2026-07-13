@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Eye, Pencil, Send, Trash2, Undo2 } from 'lucide-react';
+import { Archive, CalendarClock, CheckCircle, Eye, Pencil, RotateCcw, Send, Trash2, Undo2, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -14,7 +14,7 @@ import { apiMessage } from '@/lib/api';
 import { adminService } from '@/services/admin.service';
 import type { Blog, BlogStatus } from '@/types/blog';
 
-const statuses: Array<'' | BlogStatus> = ['', 'DRAFT', 'SUBMITTED', 'UNDER_REVIEW', 'REVISION_REQUESTED', 'APPROVED', 'REJECTED', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'];
+const statuses: Array<'' | BlogStatus> = ['', 'DRAFT', 'EDITING', 'QUALITY_REVIEW', 'NEEDS_CORRECTION', 'READY_FOR_ADMIN', 'SCHEDULED', 'REJECTED', 'PUBLISHED', 'UNPUBLISHED', 'ARCHIVED'];
 
 export default function ManageBlogsPage() {
   const [searchParams] = useSearchParams();
@@ -90,10 +90,28 @@ export default function ManageBlogsPage() {
     }
   }
 
+  async function workflow(blog: Blog, action: 'approve' | 'schedule' | 'return' | 'reject' | 'archive') {
+    if (processing.has(blog.id)) return;
+    let note = '';
+    let scheduledAt = '';
+    if (action === 'return' || action === 'reject') { note = window.prompt(`Reason to ${action} this article:`) ?? ''; if (note.trim().length < 10) return toast.error('Please provide at least 10 characters.'); }
+    if (action === 'schedule') { scheduledAt = window.prompt('Publication date and time (ISO or local date-time):') ?? ''; if (!scheduledAt || Number.isNaN(Date.parse(scheduledAt))) return toast.error('Enter a valid publication date.'); }
+    setProcessing((prev) => new Set(prev).add(blog.id));
+    try {
+      if (action === 'approve') await adminService.approveBlog(blog.id);
+      if (action === 'schedule') await adminService.scheduleBlog(blog.id, new Date(scheduledAt).toISOString());
+      if (action === 'return') await adminService.returnToEditor(blog.id, note);
+      if (action === 'reject') await adminService.rejectBlog(blog.id, note);
+      if (action === 'archive') await adminService.archiveBlog(blog.id);
+      toast.success(`Article ${action === 'return' ? 'returned to editor' : `${action}d`}.`); load();
+    } catch (error) { toast.error(apiMessage(error, 'Could not update the publication workflow.')); }
+    finally { setProcessing((prev) => { const next = new Set(prev); next.delete(blog.id); return next; }); }
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-2xl font-semibold">Manage blogs</h2>
+        <div><p className="text-xs font-semibold uppercase tracking-[.2em] text-[#a9793d]">Admin only</p><h2 className="font-serif text-3xl font-semibold">Publication queue</h2></div>
         <div className="flex w-full gap-2 sm:w-auto">
           <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search blogs" />
           <Select value={status} onChange={(e) => setStatus(e.target.value)}>
@@ -115,6 +133,8 @@ export default function ManageBlogsPage() {
                     <div className="flex flex-wrap gap-2">
                       <Button asChild size="sm" variant="outline"><Link to={`/editor/blogs/${blog.id}/review`}><Eye className="h-4 w-4" /> View</Link></Button>
                       <Button asChild size="sm" variant="outline"><Link to={`/editor/blogs/${blog.id}/edit`}><Pencil className="h-4 w-4" /> Edit</Link></Button>
+                      {blog.status === 'READY_FOR_ADMIN' && <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void workflow(blog, 'approve')}><CheckCircle className="h-4 w-4" /> Final approval</Button>}
+                      {blog.status === 'READY_FOR_ADMIN' && <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void workflow(blog, 'schedule')}><CalendarClock className="h-4 w-4" /> Schedule</Button>}
                       {blog.status === 'PUBLISHED' ? (
                         <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void unpublish(blog)}><Undo2 className="h-4 w-4" /> Unpublish</Button>
                       ) : blog.status === 'UNPUBLISHED' ? (
@@ -122,6 +142,9 @@ export default function ManageBlogsPage() {
                       ) : (
                         <Button size="sm" disabled={!canPublishStatus(blog.status) || processing.has(blog.id)} onClick={() => void publish(blog)}><Send className="h-4 w-4" /> Publish</Button>
                       )}
+                      {['READY_FOR_ADMIN', 'REJECTED'].includes(blog.status) && <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void workflow(blog, 'return')}><RotateCcw className="h-4 w-4" /> Return to editor</Button>}
+                      {!['PUBLISHED', 'ARCHIVED'].includes(blog.status) && <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void workflow(blog, 'reject')}><XCircle className="h-4 w-4" /> Reject</Button>}
+                      {blog.status !== 'ARCHIVED' && <Button size="sm" variant="outline" disabled={processing.has(blog.id)} onClick={() => void workflow(blog, 'archive')}><Archive className="h-4 w-4" /> Archive</Button>}
                       <Button size="sm" variant="destructive" disabled={processing.has(blog.id)} onClick={() => setDeleteTarget(blog)}><Trash2 className="h-4 w-4" /> Delete</Button>
                     </div>
                   </td>
@@ -145,5 +168,5 @@ export default function ManageBlogsPage() {
 }
 
 function canPublishStatus(status: BlogStatus) {
-  return status === 'SUBMITTED' || status === 'APPROVED' || status === 'UNPUBLISHED';
+  return status === 'READY_FOR_ADMIN' || status === 'UNPUBLISHED';
 }

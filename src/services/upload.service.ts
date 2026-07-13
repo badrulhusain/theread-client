@@ -12,7 +12,6 @@ export const uploadService = {
     formData.append('type', type);
 
     const { data } = await api.post<UploadImageResponse>('/uploads/image', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
       onUploadProgress: (event) => {
         if (!options.onProgress || !event.total) return;
         options.onProgress(Math.round((event.loaded / event.total) * 100));

@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
-import { Search, UploadCloud } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Search } from 'lucide-react';
 import { BlogCard } from '@/components/blog/BlogCard';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select } from '@/components/ui/select';
 import { Pagination } from '@/components/ui/pagination';
 import { Card, CardContent } from '@/components/ui/card';
 import { blogService, taxonomyService } from '@/services/blog.service';
-import { useAuth } from '@/store/authStore';
 import type { Blog, BlogCategory, BlogTag } from '@/types/blog';
 
 export default function BlogsPage() {
-  const { user } = useAuth();
   const [searchParams] = useSearchParams();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -64,13 +61,12 @@ export default function BlogsPage() {
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 pb-24 md:px-8 md:pb-10">
       <div className="mb-7 flex flex-col gap-5">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#a9793d]">Magazine archive</p>
             <h1 className="mt-2 font-serif text-4xl font-semibold tracking-tight text-[#231b17] md:text-5xl">Published blogs</h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#74685f]">Browse essays, dispatches, and reflections from The Read community.</p>
           </div>
-          {(user?.role === 'EDITOR' || user?.role === 'ADMIN') && <Button asChild variant="outline"><Link to="/write"><UploadCloud className="h-4 w-4" /> Write a blog</Link></Button>}
         </div>
         <div className="grid gap-3 md:grid-cols-[1fr_220px_220px]">
           <div className="relative">

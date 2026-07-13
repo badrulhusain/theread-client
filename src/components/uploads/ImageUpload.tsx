@@ -51,6 +51,15 @@ export function ImageUpload({
       return;
     }
 
+    if (type === 'BLOG_COVER') {
+      const dimensionError = await validateImageDimensions(file);
+      if (dimensionError) {
+        setError(dimensionError);
+        toast.error(dimensionError);
+        return;
+      }
+    }
+
     setUploading(true);
     onUploadingChange?.(true);
     setProgress(0);
@@ -147,4 +156,23 @@ function validateFile(file: File, maxSize: number) {
   if (!allowedTypes.includes(file.type)) return 'Use a JPEG, PNG, or WebP image.';
   if (file.size > maxSize) return `Image must be ${Math.round(maxSize / 1024 / 1024)}MB or smaller.`;
   return '';
+}
+
+async function validateImageDimensions(file: File) {
+  const url = URL.createObjectURL(file);
+  try {
+    const dimensions = await new Promise<{ width: number; height: number }>((resolve, reject) => {
+      const image = new window.Image();
+      image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+      image.onerror = reject;
+      image.src = url;
+    });
+    if (dimensions.width < 640 || dimensions.height < 360) return 'Thumbnail must be at least 640 × 360 pixels.';
+    if (dimensions.width > 8000 || dimensions.height > 8000) return 'Thumbnail dimensions cannot exceed 8000 × 8000 pixels.';
+    return '';
+  } catch {
+    return 'The selected image could not be read.';
+  } finally {
+    URL.revokeObjectURL(url);
+  }
 }

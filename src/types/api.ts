@@ -12,6 +12,12 @@ export interface PaginatedResponse<T> {
   totalPages?: number;
 }
 
+export interface ApiEnvelope<T> {
+  data: T;
+  message?: string;
+  meta?: PaginatedResponse<never>['meta'];
+}
+
 export interface ApiErrorBody {
   message?: string | string[];
   error?: string;

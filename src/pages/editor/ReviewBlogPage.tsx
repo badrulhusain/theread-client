@@ -5,6 +5,7 @@ import { CheckCircle, Edit3, Eye, RotateCcw, Save, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { StatusBadge } from '@/components/ui/badge';
 import { RichTextEditor } from '@/components/editor/RichTextEditor';
@@ -13,7 +14,7 @@ import { apiMessage } from '@/lib/api';
 import { isValidOptionalUrl, sanitizeHtml, stripHtml } from '@/lib/blog-content';
 import { canEditorWorkOn, editorialService } from '@/services/editorial.service';
 import { useAuth } from '@/store/authStore';
-import type { Blog, BlogCoverImage, BlogFormPayload, BlogStatus } from '@/types/blog';
+import type { Blog, BlogCoverImage, BlogFormPayload, BlogStatus, EditorialChecklist, EditorialRecommendation } from '@/types/blog';
 
 type ReviewEditForm = Pick<BlogFormPayload, 'title' | 'excerpt' | 'content' | 'coverImage'>;
 
@@ -29,6 +30,12 @@ export default function ReviewBlogPage() {
   const [submitting, setSubmitting] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
   const [uploadingCover, setUploadingCover] = useState(false);
+  const [notes, setNotes] = useState('');
+  const [plagiarismScore, setPlagiarismScore] = useState('');
+  const [plagiarismReviewed, setPlagiarismReviewed] = useState(false);
+  const [factCheckComplete, setFactCheckComplete] = useState(false);
+  const [recommendation, setRecommendation] = useState<EditorialRecommendation | ''>('');
+  const [checklist, setChecklist] = useState<EditorialChecklist>({ structure: false, style: false, sources: false, rights: false, seo: false });
 
   function load() {
     setLoading(true);
@@ -36,6 +43,7 @@ export default function ReviewBlogPage() {
       .then((data) => {
         setBlog(data);
         setEditForm(formFromBlog(data));
+        setNotes(data.internalNotes ?? ''); setPlagiarismScore(data.plagiarismScore?.toString() ?? ''); setPlagiarismReviewed(!!data.plagiarismReviewed); setFactCheckComplete(!!data.factCheckComplete); setRecommendation(data.recommendation ?? ''); setChecklist(data.editorialChecklist ?? { structure: false, style: false, sources: false, rights: false, seo: false });
       })
       .catch((error) => toast.error(apiMessage(error, 'Could not load this blog.')))
       .finally(() => setLoading(false));
@@ -44,9 +52,8 @@ export default function ReviewBlogPage() {
   useEffect(load, [id]);
 
   const canReview = canEditorWorkOn(blog, user);
-  const canManagePublication = user?.role === 'EDITOR' || user?.role === 'ADMIN';
+  const canUseFullEditor = user?.role === 'EDITOR' || user?.role === 'ADMIN';
   const decisionCommentLength = comment.trim().length;
-  const publicationAction = getPublicationAction(blog?.status);
 
   async function run(action: 'pick' | 'approve' | 'reject' | 'revision') {
     if ((action === 'reject' || action === 'revision') && decisionCommentLength < 10) {
@@ -59,11 +66,11 @@ export default function ReviewBlogPage() {
       let nextStatus: BlogStatus | null = null;
       if (action === 'pick') {
         updated = await editorialService.pick(id);
-        nextStatus = 'UNDER_REVIEW';
+        nextStatus = 'QUALITY_REVIEW';
       }
       if (action === 'approve') {
         updated = await editorialService.approve(id, comment.trim() || undefined);
-        nextStatus = 'APPROVED';
+        nextStatus = 'READY_FOR_ADMIN';
       }
       if (action === 'reject') {
         updated = await editorialService.reject(id, comment.trim());
@@ -71,7 +78,7 @@ export default function ReviewBlogPage() {
       }
       if (action === 'revision') {
         updated = await editorialService.requestRevision(id, comment.trim());
-        nextStatus = 'REVISION_REQUESTED';
+        nextStatus = 'NEEDS_CORRECTION';
       }
       if (updated || nextStatus) {
         setBlog((current) => {
@@ -118,18 +125,11 @@ export default function ReviewBlogPage() {
     }
   }
 
-  async function runPublication(action: 'publish' | 'unpublish') {
-    setSubmitting(action);
-    try {
-      const updated = action === 'publish' ? await editorialService.publish(id) : await editorialService.unpublish(id);
-      setBlog(updated);
-      setEditForm(formFromBlog(updated));
-      toast.success(action === 'publish' ? 'Blog published.' : 'Blog unpublished.');
-    } catch (error) {
-      toast.error(apiMessage(error, action === 'publish' ? 'Could not publish blog.' : 'Could not unpublish blog.'));
-    } finally {
-      setSubmitting('');
-    }
+  async function saveReviewRecord() {
+    setSubmitting('review-record');
+    try { const updated = await editorialService.saveReview(id, { internalNotes: notes, plagiarismScore: plagiarismScore ? Number(plagiarismScore) : null, plagiarismReviewed, factCheckComplete, editorialChecklist: checklist, recommendation: recommendation || null }); setBlog(updated); toast.success('Editorial review saved.'); }
+    catch (error) { toast.error(apiMessage(error, 'Could not save editorial review.')); }
+    finally { setSubmitting(''); }
   }
 
   if (loading) return <p className="p-4 text-[#74685f] md:p-8">Loading review...</p>;
@@ -147,23 +147,14 @@ export default function ReviewBlogPage() {
             <StatusBadge status={blog.status} />
           </div>
           <div className="flex flex-wrap gap-2">
-            {blog.status === 'SUBMITTED' && <Button disabled={submitting === 'pick'} onClick={() => void run('pick')}>{submitting === 'pick' ? 'Picking...' : 'Pick for review'}</Button>}
+            {blog.status === 'QUALITY_REVIEW' && <Button disabled={submitting === 'pick'} onClick={() => void run('pick')}>{submitting === 'pick' ? 'Picking...' : 'Pick for review'}</Button>}
             {canReview && (
               <>
                 <Button variant={mode === 'review' ? 'default' : 'outline'} onClick={() => setMode('review')}><Eye className="h-4 w-4" /> Review</Button>
                 <Button variant={mode === 'edit' ? 'default' : 'outline'} onClick={() => setMode('edit')}><Edit3 className="h-4 w-4" /> Edit</Button>
               </>
             )}
-            {canManagePublication && <Button asChild variant="ghost"><Link to={`/editor/blogs/${blog.id}/edit`}>Full edit page</Link></Button>}
-            {canManagePublication && publicationAction && (
-              <Button
-                variant={publicationAction.action === 'unpublish' ? 'outline' : 'default'}
-                disabled={!!submitting || savingEdit || uploadingCover}
-                onClick={() => void runPublication(publicationAction.action)}
-              >
-                {submitting === publicationAction.action ? `${publicationAction.loadingLabel}...` : publicationAction.label}
-              </Button>
-            )}
+            {canUseFullEditor && <Button asChild variant="ghost"><Link to={`/editor/blogs/${blog.id}/edit`}>Full edit page</Link></Button>}
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -208,6 +199,7 @@ export default function ReviewBlogPage() {
           <p className="text-sm leading-6 text-[#5c4b3d]">{canReview ? 'Approve now, or send a clear note back to the author.' : 'Pick the blog to unlock edit and decision actions.'}</p>
         </CardHeader>
         <CardContent className="space-y-4">
+          <section className="space-y-3 border-b border-[#ded3c4] pb-5"><h4 className="font-serif text-lg font-semibold">Review record</h4><Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Internal notes (never shown publicly)" /><div className="grid grid-cols-2 gap-2"><Input type="number" min="0" max="100" value={plagiarismScore} onChange={(e) => setPlagiarismScore(e.target.value)} placeholder="Similarity %" /><select className="rounded-xl border border-[#ded3c4] bg-transparent px-3 text-sm" value={recommendation} onChange={(e) => setRecommendation(e.target.value as EditorialRecommendation | '')}><option value="">Recommendation</option><option value="APPROVE">Approve</option><option value="RETURN">Return</option><option value="REJECT">Reject</option></select></div><ReviewCheck checked={plagiarismReviewed} onChange={setPlagiarismReviewed} label="Plagiarism report reviewed" /><ReviewCheck checked={factCheckComplete} onChange={setFactCheckComplete} label="Fact-check complete" />{(Object.keys(checklist) as Array<keyof EditorialChecklist>).map((key) => <ReviewCheck key={key} checked={checklist[key]} onChange={(value) => setChecklist((current) => ({ ...current, [key]: value }))} label={`${key[0].toUpperCase()}${key.slice(1)} checked`} />)}<Button variant="outline" disabled={!!submitting} onClick={() => void saveReviewRecord()}><Save className="h-4 w-4" /> Save review record</Button></section>
           {canReview ? (
             <>
               <Textarea
@@ -236,7 +228,7 @@ export default function ReviewBlogPage() {
             </>
           ) : (
             <div className="rounded-xl border border-[#ded3c4] bg-[#fffaf1] p-4 text-sm leading-6 text-[#3a2b22]">
-              {blog.status === 'SUBMITTED' ? 'This blog is waiting to be picked.' : 'Decision actions are only available while the blog is under review and assigned to you.'}
+              {blog.status === 'QUALITY_REVIEW' ? 'This blog is waiting to be picked.' : 'Decision actions are only available during editorial review.'}
             </div>
           )}
         </CardContent>
@@ -245,12 +237,7 @@ export default function ReviewBlogPage() {
   );
 }
 
-function getPublicationAction(status?: BlogStatus) {
-  if (status === 'SUBMITTED') return { action: 'publish' as const, label: 'Publish', loadingLabel: 'Publishing' };
-  if (status === 'UNPUBLISHED') return { action: 'publish' as const, label: 'Republish', loadingLabel: 'Republishing' };
-  if (status === 'PUBLISHED') return { action: 'unpublish' as const, label: 'Unpublish', loadingLabel: 'Unpublishing' };
-  return null;
-}
+function ReviewCheck({ checked, onChange, label }: { checked: boolean; onChange: (value: boolean) => void; label: string }) { return <label className="flex items-center gap-2 text-sm"><Checkbox checked={checked} onCheckedChange={(value) => onChange(value === true)} />{label}</label>; }
 
 function formFromBlog(blog: Blog): ReviewEditForm {
   return {

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarDays, Clock, Search, Sparkles, UploadCloud } from 'lucide-react';
+import { CalendarDays, Clock, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -8,13 +8,17 @@ import { formatDate } from '@/components/blog/BlogCard';
 import { coverImageAlt, coverImageUrl, excerptFromContent, readingTime } from '@/lib/blog-content';
 import { blogService, taxonomyService } from '@/services/blog.service';
 import { useAuth } from '@/store/authStore';
-import type { Blog, BlogCategory } from '@/types/blog';
+import type { ArticleSeries, Blog, BlogCategory, Contributor } from '@/types/blog';
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
+  const [trending, setTrending] = useState<Blog[]>([]);
+  const [series, setSeries] = useState<ArticleSeries[]>([]);
+  const [contributors, setContributors] = useState<Contributor[]>([]);
+  const [newsletterEmail, setNewsletterEmail] = useState('');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
@@ -24,6 +28,9 @@ export default function HomePage() {
       .catch(() => setBlogs([]))
       .finally(() => setLoading(false));
     taxonomyService.categories().then(setCategories).catch(() => setCategories([]));
+    blogService.trending().then(setTrending).catch(() => setTrending([]));
+    blogService.series().then(setSeries).catch(() => setSeries([]));
+    blogService.contributors().then(setContributors).catch(() => setContributors([]));
   }, []);
 
   useEffect(() => {
@@ -83,15 +90,6 @@ export default function HomePage() {
           <Card><CardContent className="space-y-3 text-[#74685f]"><div className="flex items-center gap-2"><Sparkles className="h-4 w-4" /> No published blogs yet.</div><p>Once editors approve and admins publish articles, they will appear here.</p><Button asChild><Link to="/blogs">Browse blogs</Link></Button></CardContent></Card>
         )}
       </section>
-      {(user?.role === 'EDITOR' || user?.role === 'ADMIN') && <section className="mx-auto max-w-7xl px-4 pb-10 md:px-8">
-        <div className="flex flex-col gap-4 rounded-2xl border border-white/60 bg-[#eef0e9] p-5 shadow-[12px_12px_26px_rgba(97,85,68,0.16),-9px_-9px_22px_rgba(255,255,250,0.84)] md:flex-row md:items-center md:justify-between md:p-6">
-          <div>
-            <h2 className="font-serif text-2xl font-semibold text-[#231b17]">Interested in writing?</h2>
-            <p className="mt-1 max-w-2xl text-sm leading-6 text-[#74685f]">Upload your blog draft and send it to the editorial team when it is ready.</p>
-          </div>
-          <Button asChild><Link to="/write"><UploadCloud className="h-4 w-4" /> Upload a blog</Link></Button>
-        </div>
-      </section>}
       {categories.length > 0 && (
         <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8">
           <h2 className="mb-3 font-serif text-2xl font-semibold text-[#231b17]">Categories</h2>
@@ -100,12 +98,18 @@ export default function HomePage() {
           </div>
         </section>
       )}
+      {trending.length > 0 && <PublicationSection eyebrow="Popular now" title="Trending articles"><div className="grid gap-4 md:grid-cols-3">{trending.slice(0, 3).map((blog, index) => <div key={blog.id} className="flex gap-4 rounded-2xl border border-white/60 p-4 shadow-[7px_7px_16px_rgba(97,85,68,.13)]"><span className="font-serif text-4xl text-[#a9793d]">{index + 1}</span><BlogListItem blog={blog} /></div>)}</div></PublicationSection>}
+      {series.length > 0 && <PublicationSection eyebrow="Read deeper" title="Article series"><div className="grid gap-4 md:grid-cols-3">{series.slice(0, 3).map((item) => <Link key={item.id} to={`/series/${item.slug}`} className="rounded-2xl border border-white/60 p-5 shadow-[8px_8px_18px_rgba(97,85,68,.14)]"><p className="font-serif text-2xl font-semibold">{item.name}</p><p className="mt-2 line-clamp-3 text-sm leading-6 text-[#74685f]">{item.description}</p></Link>)}</div></PublicationSection>}
+      {contributors.length > 0 && <PublicationSection eyebrow="Our voices" title="Contributors"><div className="flex gap-4 overflow-x-auto pb-3">{contributors.slice(0, 8).map((person) => <Link key={person.id} to={`/contributors/${person.slug ?? person.id}`} className="min-w-52 rounded-2xl border border-white/60 p-4 text-center shadow-[7px_7px_16px_rgba(97,85,68,.13)]">{person.avatarUrl ? <img src={person.avatarUrl} alt="" className="mx-auto h-16 w-16 rounded-full object-cover" /> : <span className="mx-auto grid h-16 w-16 place-items-center rounded-full bg-[#53693a] font-serif text-xl text-white">{person.name[0]}</span>}<p className="mt-3 font-serif text-xl font-semibold">{person.name}</p></Link>)}</div></PublicationSection>}
+      <section className="mx-auto max-w-7xl px-4 pb-16 md:px-8"><div className="rounded-3xl bg-[#53693a] p-7 text-[#fffaf1] md:flex md:items-center md:justify-between"><div><p className="text-xs font-semibold uppercase tracking-[.24em] text-[#e8c98e]">The weekly edit</p><h2 className="mt-2 font-serif text-3xl font-semibold">The best of The Read, in your inbox.</h2></div><form className="mt-5 flex max-w-md gap-2 md:mt-0" onSubmit={(e) => { e.preventDefault(); void blogService.newsletter(newsletterEmail).then(() => setNewsletterEmail('')); }}><Input required type="email" value={newsletterEmail} onChange={(e) => setNewsletterEmail(e.target.value)} placeholder="you@example.com" /><Button type="submit">Subscribe</Button></form></div></section>
     </main>
   );
 }
 
+function PublicationSection({ eyebrow, title, children }: { eyebrow: string; title: string; children: React.ReactNode }) { return <section className="mx-auto max-w-7xl px-4 pb-12 md:px-8"><p className="text-xs font-semibold uppercase tracking-[.24em] text-[#a9793d]">{eyebrow}</p><h2 className="mb-5 mt-1 font-serif text-3xl font-semibold">{title}</h2>{children}</section>; }
+
 function secondaryCta(role?: string) {
-  if (role === 'EDITOR' || role === 'ADMIN') return { to: '/write', label: 'Write a blog' };
+  if (role === 'EDITOR' || role === 'ADMIN') return { to: '/editor/submissions', label: 'Open editor desk' };
   if (role === 'USER') return { to: '/profile', label: 'View your profile' };
   return { to: '/register', label: 'Join The Read' };
 }

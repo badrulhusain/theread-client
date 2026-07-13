@@ -6,6 +6,7 @@ import type {
   BlogCoverImage,
   BlogFormPayload,
   DashboardSummary,
+  EditorialEvaluation,
 } from '@/types/blog';
 import type { AuthUser } from '@/types/auth';
 
@@ -43,7 +44,7 @@ export const editorialService = {
   },
 
   async activeReviews(params: QueryParams = {}) {
-    const reviewParams = { limit: 10, status: 'UNDER_REVIEW', ...params };
+    const reviewParams = { limit: 10, status: 'QUALITY_REVIEW', ...params };
     const paths = ['/editorial/blogs', '/editorial/my-reviews', '/editorial/reviews', '/editorial/submissions'];
     let lastError: unknown;
 
@@ -51,7 +52,7 @@ export const editorialService = {
       try {
         const { data } = await api.get(path, { params: reviewParams });
         const result = unwrapList<Blog>(data);
-        return { ...result, items: result.items.map(normalizeBlog).filter((blog) => normalizeBlogStatus(blog.status) === 'UNDER_REVIEW') };
+        return { ...result, items: result.items.map(normalizeBlog).filter((blog) => normalizeBlogStatus(blog.status) === 'QUALITY_REVIEW') };
       } catch (error) {
         lastError = error;
       }
@@ -65,8 +66,42 @@ export const editorialService = {
     return normalizeBlog(unwrapData<Blog>(data));
   },
 
+  async createDraft(payload: BlogFormPayload) {
+    const { data } = await api.post<Blog>('/editorial/articles', payload);
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
+
+  async autosave(id: string, payload: Partial<BlogFormPayload>) {
+    const { data } = await api.patch<Blog>(`/editorial/articles/${id}/autosave`, payload);
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
+
+  async myWork(params: QueryParams = {}) {
+    const { data } = await api.get('/editorial/articles/my-work', { params: { limit: 10, ...params } });
+    const result = unwrapList<Blog>(data);
+    return { ...result, items: result.items.map(normalizeBlog) };
+  },
+
   async pick(id: string) {
     const { data } = await api.post<Blog>(`/editorial/blogs/${id}/pick`);
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
+
+  async assign(id: string, editorId: string) { const { data } = await api.post<Blog>(`/editorial/blogs/${id}/assign`, { editorId }); return normalizeBlog(unwrapData<Blog>(data)); },
+  async saveReview(id: string, payload: Pick<Blog, 'internalNotes' | 'plagiarismScore' | 'plagiarismReviewed' | 'factCheckComplete' | 'editorialChecklist' | 'recommendation'>) { const { data } = await api.patch<Blog>(`/editorial/blogs/${id}/review`, payload); return normalizeBlog(unwrapData<Blog>(data)); },
+
+  async saveEvaluation(id: string, payload: EditorialEvaluation) {
+    const { data } = await api.put<Blog>(`/editorial/articles/${id}/evaluation`, payload);
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
+
+  async markQualityReviewComplete(id: string) {
+    const { data } = await api.post<Blog>(`/editorial/articles/${id}/quality-review/complete`);
+    return normalizeBlog(unwrapData<Blog>(data));
+  },
+
+  async sendToAdmin(id: string) {
+    const { data } = await api.post<Blog>(`/editorial/articles/${id}/send-to-admin`);
     return normalizeBlog(unwrapData<Blog>(data));
   },
 
@@ -95,20 +130,11 @@ export const editorialService = {
     return normalizeBlog(unwrapData<Blog>(data));
   },
 
-  async publish(id: string) {
-    const { data } = await api.post<Blog>(`/editorial/blogs/${id}/publish`);
-    return normalizeBlog(unwrapData<Blog>(data));
-  },
-
-  async unpublish(id: string) {
-    const { data } = await api.post<Blog>(`/editorial/blogs/${id}/unpublish`);
-    return normalizeBlog(unwrapData<Blog>(data));
-  },
 };
 
 export function canEditorWorkOn(blog: Blog | null | undefined, user: AuthUser | null | undefined) {
   if (!blog || !user) return false;
-  return normalizeBlogStatus(blog.status) === 'UNDER_REVIEW' && (user.role === 'EDITOR' || user.role === 'ADMIN');
+  return ['EDITING', 'QUALITY_REVIEW', 'NEEDS_CORRECTION'].includes(normalizeBlogStatus(blog.status)) && (user.role === 'EDITOR' || user.role === 'ADMIN');
 }
 
 export function canManageEditorialBlog(user: AuthUser | null | undefined) {

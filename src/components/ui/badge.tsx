@@ -5,10 +5,11 @@ import type { BlogStatus } from '@/types/blog';
 
 const statusClasses: Record<BlogStatus, string> = {
   DRAFT: 'bg-[#eee6da] text-[#74685f]',
-  SUBMITTED: 'bg-[#efe3cd] text-[#8a5a3c]',
-  UNDER_REVIEW: 'bg-[#f1e6c9] text-[#8a5a3c]',
-  REVISION_REQUESTED: 'bg-[#ead6c7] text-[#7b2d32]',
-  APPROVED: 'bg-[#e3ead6] text-[#53693a]',
+  EDITING: 'bg-[#efe3cd] text-[#8a5a3c]',
+  QUALITY_REVIEW: 'bg-[#f1e6c9] text-[#8a5a3c]',
+  NEEDS_CORRECTION: 'bg-[#ead6c7] text-[#7b2d32]',
+  READY_FOR_ADMIN: 'bg-[#e3ead6] text-[#53693a]',
+  SCHEDULED: 'bg-[#dce7ec] text-[#365b68]',
   REJECTED: 'bg-[#ead6d6] text-[#7b2d32]',
   PUBLISHED: 'bg-[#dde8d3] text-[#53693a]',
   UNPUBLISHED: 'bg-[#eee6da] text-[#74685f]',
