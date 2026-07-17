@@ -11,7 +11,7 @@ body {
 }
 
 .prose-read p {
-  margin: 0.8rem 0;
+  margin: 1.1rem 0;
 }
 
 .prose-read h1,
@@ -27,11 +27,11 @@ body {
 }
 
 .prose-read h2 {
-  font-size: 1.75rem;
+  font-size: 2rem;
 }
 
 .prose-read h3 {
-  font-size: 1.35rem;
+  font-size: 1.55rem;
 }
 
 .prose-read ul,

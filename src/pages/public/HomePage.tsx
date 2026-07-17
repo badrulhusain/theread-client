@@ -3,9 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CalendarDays, Clock, Search, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { BlogCoverImage } from '@/components/blog/BlogCoverImage';
 import { Input } from '@/components/ui/input';
 import { formatDate } from '@/components/blog/BlogCard';
-import { coverImageAlt, coverImageUrl, excerptFromContent, readingTime } from '@/lib/blog-content';
+import { excerptFromContent, readingTime } from '@/lib/blog-content';
 import { blogService, taxonomyService } from '@/services/blog.service';
 import { useAuth } from '@/store/authStore';
 import type { ArticleSeries, Blog, BlogCategory, Contributor } from '@/types/blog';
@@ -117,15 +118,9 @@ function secondaryCta(role?: string) {
 function LatestBlog({ blog }: { blog: Blog }) {
   const target = blog.slug ? `/blogs/${blog.slug}` : `/blogs`;
   const excerpt = blog.excerpt || excerptFromContent(blog.content ?? '', 240);
-  const coverUrl = coverImageUrl(blog);
-
   return (
     <article className="overflow-hidden rounded-2xl border border-white/60 bg-[#eef0e9] shadow-[15px_15px_32px_rgba(97,85,68,0.18),-10px_-10px_24px_rgba(255,255,250,0.86)]">
-      {coverUrl ? (
-        <img src={coverUrl} alt={coverImageAlt(blog)} className="aspect-[16/8] w-full object-cover" />
-      ) : (
-        <div className="aspect-[16/8] w-full bg-[#53693a]" aria-hidden="true" />
-      )}
+      <BlogCoverImage blog={blog} eager className="aspect-[16/8] w-full" />
       <div className="space-y-4 p-5 md:p-7">
         <div className="flex flex-wrap items-center gap-3 text-xs font-medium text-[#a19184]">
           <span>{blog.author?.name ?? 'The Read'}</span>
@@ -143,12 +138,10 @@ function LatestBlog({ blog }: { blog: Blog }) {
 function BlogListItem({ blog }: { blog: Blog }) {
   const target = blog.slug ? `/blogs/${blog.slug}` : `/blogs`;
   const excerpt = blog.excerpt || excerptFromContent(blog.content ?? '', 120);
-  const coverUrl = coverImageUrl(blog);
-
   return (
     <article className="rounded-2xl border border-white/60 bg-[#eef0e9] p-4 shadow-[8px_8px_18px_rgba(97,85,68,0.14),-6px_-6px_14px_rgba(255,255,250,0.82)] transition hover:-translate-y-0.5 hover:bg-[#f5f6f1] hover:shadow-[11px_11px_24px_rgba(97,85,68,0.16),-7px_-7px_16px_rgba(255,255,250,0.88)]">
       <div className="flex items-start gap-3">
-        {coverUrl && <img src={coverUrl} alt={coverImageAlt(blog)} loading="lazy" className="h-20 w-24 shrink-0 rounded-xl object-cover" />}
+        <BlogCoverImage blog={blog} className="h-20 w-24 shrink-0 rounded-xl" />
         <div className="min-w-0 flex-1">
           <Link to={target} className="line-clamp-2 font-serif text-xl font-semibold leading-tight text-[#231b17] hover:text-[#7b2d32]">{blog.title}</Link>
           {excerpt && <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#74685f]">{excerpt}</p>}

@@ -15,7 +15,7 @@ interface CoverImageManagerProps {
   excerpt?: string;
   disabled?: boolean;
   onUploadingChange?: (uploading: boolean) => void;
-  onSave: (value: BlogCoverImage | null) => void;
+  onSave: (value: BlogCoverImage | null) => void | Promise<void>;
 }
 
 const defaultCrop: BlogImageCrop = { x: 50, y: 50, width: 100, height: 100, zoom: 1 };
@@ -54,16 +54,19 @@ export function CoverImageManager({
   function handleUpload(image: { url: string; publicId: string } | null) {
     if (!image) {
       setDraft(null);
+      void Promise.resolve(onSave(null)).catch(() => undefined);
       toast.success('Cover image removed. Save changes to apply.');
       return;
     }
-    setDraft({
+    const nextDraft: BlogCoverImage = {
       url: image.url,
       publicId: image.publicId,
       altText: draft?.altText ?? '',
       caption: draft?.caption ?? '',
       crop: draft?.crop ?? defaultCrop,
-    });
+    };
+    setDraft(nextDraft);
+    void Promise.resolve(onSave(nextDraft)).catch(() => undefined);
     setActiveTab('Adjust');
   }
 
@@ -87,13 +90,16 @@ export function CoverImageManager({
     toast.success('Cover adjustment reset.');
   }
 
-  function saveCover() {
+  async function saveCover() {
     setSaving(true);
-    onSave(draft ? { ...draft, altText: draft.altText?.trim() || null, crop: draft.crop ?? defaultCrop } : null);
-    window.setTimeout(() => {
+    try {
+      await onSave(draft ? { ...draft, altText: draft.altText?.trim() || null, crop: draft.crop ?? defaultCrop } : null);
+      toast.success(draft ? 'Cover image settings saved.' : 'Cover image removed.');
+    } catch {
+      // The parent reports persistence errors with API context.
+    } finally {
       setSaving(false);
-      toast.success(draft ? 'Cover image settings saved to this edit.' : 'Cover image removal saved to this edit.');
-    }, 250);
+    }
   }
 
   return (
@@ -103,7 +109,7 @@ export function CoverImageManager({
           <p className="text-sm font-semibold text-[#5c4b3d]">Cover image</p>
           <p className="mt-1 text-xs leading-5 text-[#74685f]">Recommended size: 1200 x 675 px. Supported formats: JPG, PNG, WEBP. Maximum size: 2 MB.</p>
         </div>
-        <Button type="button" size="sm" disabled={disabled || saving} onClick={saveCover}>
+        <Button type="button" size="sm" disabled={disabled || saving} onClick={() => void saveCover()}>
           <Save className="h-4 w-4" /> {saving ? 'Saving...' : 'Save cover'}
         </Button>
       </div>

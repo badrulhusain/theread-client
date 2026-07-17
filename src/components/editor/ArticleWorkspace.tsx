@@ -32,6 +32,7 @@ import type {
   ArticleSeries,
   Blog,
   BlogCategory,
+  BlogCoverImage,
   BlogFormPayload,
   BlogStatus,
   BlogTag,
@@ -160,6 +161,30 @@ export function ArticleWorkspace({
     setForm((current) => ({ ...current, ...next }));
     setSaveState("unsaved");
   }, []);
+
+  async function saveCoverImage(coverImage: BlogCoverImage | null) {
+    setForm((current) => ({ ...current, coverImage }));
+    if (!id) {
+      setSaveState("unsaved");
+      return;
+    }
+
+    const wasSaved = saveState === "saved";
+    if (wasSaved) setSaveState("saving");
+    setBusy("cover");
+    try {
+      await editorialService.updateCoverImage(id, coverImage);
+      if (wasSaved) {
+        setSaveState((current) => current === "saving" ? "saved" : current);
+      }
+    } catch (error) {
+      setSaveState("error");
+      toast.error(apiMessage(error, "Could not save the thumbnail."));
+      throw error;
+    } finally {
+      setBusy("");
+    }
+  }
   const warnings = useMemo(
     () => getWarnings(form, evaluation),
     [evaluation, form],
@@ -418,7 +443,7 @@ export function ArticleWorkspace({
                 excerpt={form.excerpt}
                 disabled={!!busy}
                 onUploadingChange={setUploading}
-                onSave={(coverImage) => update({ coverImage })}
+                onSave={saveCoverImage}
               />
               <SourceEditor
                 sources={form.sources ?? []}

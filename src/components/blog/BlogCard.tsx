@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { CalendarDays, Clock, Feather, MessageSquare } from 'lucide-react';
+import { CalendarDays, Clock, MessageSquare } from 'lucide-react';
+import { BlogCoverImage } from '@/components/blog/BlogCoverImage';
 import { Card, CardContent } from '@/components/ui/card';
 import { StatusBadge } from '@/components/ui/badge';
-import { coverImageAlt, coverImageUrl, excerptFromContent, normalizeCategoryName, normalizeTagName, readingTime } from '@/lib/blog-content';
+import { excerptFromContent, normalizeCategoryName, normalizeTagName, readingTime } from '@/lib/blog-content';
 import type { Blog } from '@/types/blog';
 
 export function BlogCard({ blog, showStatus = false, featured = false }: { blog: Blog; showStatus?: boolean; featured?: boolean }) {
@@ -10,18 +11,9 @@ export function BlogCard({ blog, showStatus = false, featured = false }: { blog:
   const category = normalizeCategoryName(blog.category);
   const tags = (blog.tags ?? []).map(normalizeTagName).filter(Boolean).slice(0, 3);
   const excerpt = blog.excerpt || excerptFromContent(blog.content ?? '') || 'No excerpt yet.';
-  const coverUrl = coverImageUrl(blog);
   return (
     <Card className="group overflow-hidden transition hover:-translate-y-0.5 hover:shadow-[16px_16px_34px_rgba(97,85,68,0.2),-10px_-10px_24px_rgba(255,255,250,0.86)]">
-      {coverUrl ? (
-        <img src={coverUrl} alt={coverImageAlt(blog)} loading="lazy" className={featured ? 'h-48 w-full object-cover' : 'h-28 w-full object-cover'} />
-      ) : (
-        <div className={featured ? 'h-48 bg-[#7b2d32]' : 'h-28 bg-[#53693a]'} aria-hidden="true">
-          <div className="flex h-full items-center justify-center font-serif text-6xl font-bold italic text-[#fffaf1]/35">
-            <Feather className="h-12 w-12 stroke-[1.25]" />
-          </div>
-        </div>
-      )}
+      <BlogCoverImage blog={blog} className={featured ? 'h-48' : 'h-32'} />
       <CardContent className="space-y-3">
         {(category || tags.length > 0) && (
           <div className="flex flex-wrap gap-2">
