@@ -73,9 +73,9 @@ export const adminService = {
   },
 
   async approveBlog(id: string) { const { data } = await api.post<Blog>(`/admin/blogs/${id}/approve`); return normalizeBlog(unwrapData<Blog>(data)); },
-  async scheduleBlog(id: string, scheduledAt: string) { const { data } = await api.post<Blog>(`/admin/blogs/${id}/schedule`, { scheduledAt }); return normalizeBlog(unwrapData<Blog>(data)); },
+  async scheduleBlog(id: string, scheduledAt: string) { const { data } = await api.post<Blog>(`/admin/blogs/${id}/schedule`, { publishAt: scheduledAt }); return normalizeBlog(unwrapData<Blog>(data)); },
   async returnToEditor(id: string, note: string) { const { data } = await api.post<Blog>(`/admin/blogs/${id}/return-to-editor`, { note }); return normalizeBlog(unwrapData<Blog>(data)); },
-  async rejectBlog(id: string, note: string) { const { data } = await api.post<Blog>(`/admin/blogs/${id}/reject`, { note }); return normalizeBlog(unwrapData<Blog>(data)); },
+  async rejectBlog(id: string, note: string) { const { data } = await api.post<Blog>(`/admin/blogs/${id}/reject`, { reason: note }); return normalizeBlog(unwrapData<Blog>(data)); },
   async archiveBlog(id: string) { const { data } = await api.post<Blog>(`/admin/blogs/${id}/archive`); return normalizeBlog(unwrapData<Blog>(data)); },
 
   async unpublishBlog(id: string) {

@@ -2,6 +2,7 @@ import { lazy, Suspense } from 'react';
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { AppLayout } from '@/components/layouts/AppLayout';
 import { PrivateRoute } from '@/components/routes/PrivateRoute';
+import { PublicOnlyRoute } from '@/components/routes/PublicOnlyRoute';
 import { RoleRoute } from '@/components/routes/RoleRoute';
 import { AuthProvider } from '@/store/authStore';
 
@@ -52,8 +53,13 @@ export const router = createBrowserRouter([
       { index: true, element: <HomePage /> },
       { path: 'blogs', element: <BlogsPage /> },
       { path: 'blogs/:slug', element: <BlogDetailPage /> },
-      { path: 'login', element: <LoginPage /> },
-      { path: 'register', element: <RegisterPage /> },
+      {
+        element: <PublicOnlyRoute />,
+        children: [
+          { path: 'login', element: <LoginPage /> },
+          { path: 'register', element: <RegisterPage /> },
+        ],
+      },
       { path: 'submit', element: <Navigate to="/blogs" replace /> },
       { path: 'contributors/:slug', element: <ContributorPage /> },
       { path: 'series/:slug', element: <SeriesPage /> },

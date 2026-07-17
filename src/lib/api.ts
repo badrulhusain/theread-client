@@ -3,7 +3,7 @@ import type { AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import type { ApiErrorBody, PaginatedResponse } from '@/types/api';
 
-const rawBaseURL = (import.meta.env.VITE_API_URL || 'http://localhost:3000').replace(/\/$/, '');
+const rawBaseURL = (import.meta.env.VITE_API_URL || 'http://localhost:4000').replace(/\/$/, '');
 const baseURL = rawBaseURL.endsWith('/api') ? rawBaseURL : `${rawBaseURL}/api`;
 
 export const TOKEN_STORAGE_KEY = 'the_read_access_token';

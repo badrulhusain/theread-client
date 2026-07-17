@@ -54,8 +54,13 @@ export const blogService = {
   },
 
   async createDraft(payload: BlogFormPayload) {
-    const { data } = await api.post<Blog>('/blogs', payload);
-    return normalizeBlog(unwrapData<Blog>(data));
+    const { data } = await api.post<Blog>('/blogs', toApiBlogPayload(payload));
+    const created = normalizeBlog(unwrapData<Blog>(data));
+    if (payload.coverImage !== undefined) {
+      const { data: updated } = await api.patch<Blog>(`/blogs/${created.id}/cover-image`, { coverImage: payload.coverImage });
+      return normalizeBlog(unwrapData<Blog>(updated));
+    }
+    return created;
   },
 
   async createBlog(payload: BlogFormPayload) {
@@ -63,8 +68,13 @@ export const blogService = {
   },
 
   async updateMine(id: string, payload: BlogFormPayload) {
-    const { data } = await api.patch<Blog>(`/blogs/${id}`, payload);
-    return normalizeBlog(unwrapData<Blog>(data));
+    const { data } = await api.patch<Blog>(`/blogs/${id}`, toApiBlogPayload(payload));
+    const updated = normalizeBlog(unwrapData<Blog>(data));
+    if (payload.coverImage !== undefined) {
+      const { data: withCover } = await api.patch<Blog>(`/blogs/${id}/cover-image`, { coverImage: payload.coverImage });
+      return normalizeBlog(unwrapData<Blog>(withCover));
+    }
+    return updated;
   },
 
   async updateBlog(id: string, payload: BlogFormPayload) {
@@ -82,14 +92,26 @@ export const blogService = {
   async getSeries(slug: string) { const { data } = await api.get(`/series/${slug}`); return unwrapData<ArticleSeries>(data); },
   async contributors() { const { data } = await api.get('/contributors'); return unwrapList<Contributor>(data).items; },
   async getContributor(slug: string) { const { data } = await api.get(`/contributors/${slug}`); return unwrapData<Contributor & { articles?: Blog[] }>(data); },
-  async saved() { const { data } = await api.get('/reader/saved'); return unwrapList<Blog>(data).items.map(normalizeBlog); },
-  async history() { const { data } = await api.get('/reader/history'); return unwrapList<Blog>(data).items.map(normalizeBlog); },
-  async save(id: string) { const { data } = await api.post(`/reader/saved/${id}`); return unwrapData<{ saved: boolean }>(data); },
-  async unsave(id: string) { await api.delete(`/reader/saved/${id}`); return { saved: false }; },
+  async saved() { const { data } = await api.get('/me/saved-blogs'); return unwrapList<Blog | { blog: Blog }>(data).items.map((item) => normalizeBlog('blog' in item ? item.blog : item)); },
+  async history() { const { data } = await api.get('/me/history'); return unwrapList<Blog>(data).items.map(normalizeBlog); },
+  async save(id: string) { const { data } = await api.post(`/me/saved-blogs/${id}`); return unwrapData<{ saved: boolean }>(data); },
+  async unsave(id: string) { await api.delete(`/me/saved-blogs/${id}`); return { saved: false }; },
   async react(id: string, reaction: ReactionType) { const { data } = await api.post(`/blogs/${id}/reactions`, { reaction }); return unwrapData<Partial<Record<ReactionType, number>>>(data); },
-  async recordHistory(id: string) { await api.post(`/reader/history/${id}`); },
+  async recordHistory(id: string) { await api.post(`/me/history/${id}`); },
   async newsletter(email: string) { const { data } = await api.post('/newsletter/subscribe', { email }); return unwrapData<{ subscribed: boolean }>(data); },
 };
+
+function toApiBlogPayload(payload: Partial<BlogFormPayload>) {
+  return {
+    ...(payload.title !== undefined ? { title: payload.title } : {}),
+    ...(payload.excerpt !== undefined ? { excerpt: payload.excerpt } : {}),
+    ...(payload.content !== undefined ? { content: payload.content } : {}),
+    ...(payload.categoryId !== undefined ? { categoryId: payload.categoryId } : {}),
+    ...(payload.tagIds !== undefined || payload.tags !== undefined ? { tagIds: payload.tagIds ?? payload.tags ?? [] } : {}),
+    ...(payload.seoTitle !== undefined ? { seoTitle: payload.seoTitle } : {}),
+    ...(payload.seoDescription !== undefined ? { seoDescription: payload.seoDescription } : {}),
+  };
+}
 
 export const taxonomyService = {
   async categories() {

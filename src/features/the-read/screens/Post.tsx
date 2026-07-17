@@ -264,7 +264,7 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
   const [views, setViews] = useState(post.views);
 
   const loadComments = () => {
-    commentsApi.listForPost(post.id)
+    commentsApi.listForPost(post.slug)
       .then(setComments)
       .catch(() => {});
   };
@@ -273,7 +273,7 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
     loadComments();
     const key = `tr_viewed_${post.slug}`;
     if (!localStorage.getItem(key)) {
-      postsApi.incrementView(post.slug)
+      postsApi.incrementView(post.id)
         .then(() => { localStorage.setItem(key, '1'); setViews(v => v + 1); })
         .catch(() => {});
     }
@@ -367,7 +367,7 @@ export const PostDesktop: React.FC<{ post: Post; user: Author; nav: (r: any) => 
           <h3 className="tr-serif" style={{ fontSize: 22, fontWeight: 500, margin: '40px 0 16px' }}>
             {commentCount} {commentCount === 1 ? 'response' : 'responses'}
           </h3>
-          <CommentBox user={user} postId={post.id} onPosted={loadComments} />
+          <CommentBox user={user} postId={post.slug} onPosted={loadComments} />
           {comments.map(c => (
             <CommentRow
               key={c.id}
@@ -389,14 +389,14 @@ export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Au
   const [views, setViews] = useState(post.views);
 
   const loadComments = () => {
-    commentsApi.listForPost(post.id).then(setComments).catch(() => {});
+    commentsApi.listForPost(post.slug).then(setComments).catch(() => {});
   };
 
   useEffect(() => {
     loadComments();
     const key = `tr_viewed_${post.slug}`;
     if (!localStorage.getItem(key)) {
-      postsApi.incrementView(post.slug)
+      postsApi.incrementView(post.id)
         .then(() => { localStorage.setItem(key, '1'); setViews(v => v + 1); })
         .catch(() => {});
     }
@@ -458,7 +458,7 @@ export const PostMobile: React.FC<{ post: Post; nav: (r: any) => void; user?: Au
           <h3 className="tr-serif" style={{ fontSize: 18, fontWeight: 500, margin: '0 0 12px' }}>
             {commentCount} {commentCount === 1 ? 'response' : 'responses'}
           </h3>
-          <CommentBox user={user} postId={post.id} onPosted={loadComments} />
+          <CommentBox user={user} postId={post.slug} onPosted={loadComments} />
           {comments.map(c => (
             <CommentRow
               key={c.id}

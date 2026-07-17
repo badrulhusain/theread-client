@@ -33,6 +33,7 @@ import type {
   Blog,
   BlogCategory,
   BlogFormPayload,
+  BlogStatus,
   BlogTag,
   EditorialEvaluation,
   SourceReference,
@@ -68,6 +69,7 @@ export function ArticleWorkspace({
   const navigate = useNavigate();
   const [id, setId] = useState(articleId ?? "");
   const [form, setForm] = useState<BlogFormPayload>(emptyArticle);
+  const [status, setStatus] = useState<BlogStatus>("DRAFT");
   const [evaluation, setEvaluation] =
     useState<EditorialEvaluation>(emptyEvaluation);
   const [categories, setCategories] = useState<BlogCategory[]>([]);
@@ -104,6 +106,7 @@ export function ArticleWorkspace({
       .then((blog) => {
         const next = formFromBlog(blog);
         setForm(next);
+        setStatus(blog.status);
         setEvaluation(blog.editorialReview ?? evaluationFromBlog(blog));
         setSaveState("saved");
         hydrated.current = true;
@@ -181,6 +184,7 @@ export function ArticleWorkspace({
           `/editor/articles/${saved.id}/edit`,
         );
       }
+      setStatus(saved.status);
       setSaveState("saved");
       toast.success("Draft saved.");
     } catch (error_) {
@@ -193,8 +197,14 @@ export function ArticleWorkspace({
 
   async function saveEvaluation() {
     if (!id) return toast.error("Save the draft before adding an evaluation.");
+    if (evaluationWarnings(evaluation).length)
+      return toast.error("Complete the editorial evaluation first.");
     setBusy("evaluation");
     try {
+      if (["DRAFT", "EDITING", "NEEDS_CORRECTION"].includes(status)) {
+        const submitted = await editorialService.submitForQualityReview(id);
+        setStatus(submitted.status);
+      }
       await editorialService.saveEvaluation(id, evaluation);
       toast.success("Critical evaluation saved.");
     } catch (error) {
@@ -217,10 +227,12 @@ export function ArticleWorkspace({
           id,
           evaluation.requiredCorrections,
         );
+        setStatus("NEEDS_CORRECTION");
       }
       if (action === "complete")
         await editorialService.markQualityReviewComplete(id);
       if (action === "admin") await editorialService.sendToAdmin(id);
+      if (action === "admin") setStatus("READY_FOR_ADMIN");
       toast.success(
         action === "admin"
           ? "Article sent to the admin queue."

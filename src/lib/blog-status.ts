@@ -34,9 +34,20 @@ export function normalizeBlogStatus(status: unknown): BlogStatus {
 }
 
 export function normalizeBlog<T extends Blog>(blog: T): T {
+  const raw = blog as T & {
+    tags?: Array<NonNullable<Blog['tags']>[number] | { tag?: NonNullable<Blog['tags']>[number] }>;
+    _count?: { comments?: number };
+    thumbnail?: { url?: string; altText?: string } | null;
+    readingTime?: number;
+  };
   return {
     ...blog,
     status: normalizeBlogStatus(blog.status),
+    tags: raw.tags?.map((item) => typeof item === 'object' && item && 'tag' in item ? (item.tag ?? item) : item) as Blog['tags'],
+    commentsCount: blog.commentsCount ?? raw._count?.comments,
+    readingTimeMinutes: blog.readingTimeMinutes ?? raw.readingTime,
+    coverImage: blog.coverImage ?? raw.thumbnail?.url,
+    coverImageAltText: blog.coverImageAltText ?? raw.thumbnail?.altText ?? null,
   };
 }
 

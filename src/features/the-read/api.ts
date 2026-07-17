@@ -1,7 +1,8 @@
 import axios from 'axios';
 import type { Author, Post, Tag, ContentBlock } from './types';
 
-const BASE = (import.meta as any).env?.VITE_API_URL ?? 'http://localhost:3000/api';
+const RAW_BASE = (import.meta as any).env?.VITE_API_URL ?? 'http://localhost:4000';
+const BASE = RAW_BASE.replace(/\/$/, '').endsWith('/api') ? RAW_BASE.replace(/\/$/, '') : `${RAW_BASE.replace(/\/$/, '')}/api`;
 
 export const http = axios.create({ baseURL: BASE });
 
@@ -155,16 +156,16 @@ export const auth = {
 // ── Posts ──────────────────────────────────────────────────────────────────────
 export const postsApi = {
   list: async (params?: { page?: number; limit?: number; status?: string; tag?: string }): Promise<Post[]> => {
-    const { data } = await http.get('/posts', { params: { limit: 20, ...params } });
+    const { data } = await http.get('/blogs', { params: { limit: 20, ...params } });
     const items = Array.isArray(data) ? data : (data.data ?? []);
     return items.map(mapPost);
   },
   get: async (id: string): Promise<Post> => {
-    const { data } = await http.get(`/posts/${id}`);
+    const { data } = await http.get(`/blogs/id/${id}`);
     return mapPost(data);
   },
   getBySlug: async (slug: string): Promise<Post> => {
-    const { data } = await http.get(`/posts/slug/${slug}`);
+    const { data } = await http.get(`/blogs/${slug}`);
     return mapPost(data);
   },
   create: async (payload: {
@@ -175,8 +176,13 @@ export const postsApi = {
     tagIds?: string[];
     status?: 'DRAFT' | 'PUBLISHED';
   }): Promise<Post> => {
-    const { data } = await http.post('/posts', payload);
-    return mapPost(data);
+    const article = { ...payload };
+    delete article.status;
+    delete article.coverImage;
+    const { data } = await http.post('/blogs/drafts', article);
+    if (!payload.coverImage) return mapPost(data);
+    const { data: updated } = await http.patch(`/blogs/${data.id}/cover-image`, { coverImage: { url: payload.coverImage } });
+    return mapPost(updated);
   },
   update: async (id: string, payload: {
     title?: string;
@@ -186,22 +192,27 @@ export const postsApi = {
     tagIds?: string[];
     status?: 'DRAFT' | 'PUBLISHED';
   }): Promise<Post> => {
-    const { data } = await http.patch(`/posts/${id}`, payload);
-    return mapPost(data);
+    const article = { ...payload };
+    delete article.status;
+    delete article.coverImage;
+    const { data } = await http.patch(`/blogs/${id}`, article);
+    if (payload.coverImage === undefined) return mapPost(data);
+    const { data: updated } = await http.patch(`/blogs/${id}/cover-image`, { coverImage: payload.coverImage ? { url: payload.coverImage } : null });
+    return mapPost(updated);
   },
   delete: async (id: string): Promise<void> => {
-    await http.delete(`/posts/${id}`);
+    await http.delete(`/admin/blogs/${id}`);
   },
-  incrementView: async (slug: string): Promise<void> => {
-    await http.post(`/posts/slug/${slug}/view`);
+  incrementView: async (id: string): Promise<void> => {
+    await http.post(`/me/history/${id}`);
   },
   toggleLike: async (postId: string): Promise<{ liked: boolean; likeCount: number }> => {
-    const { data } = await http.post(`/posts/${postId}/like`);
-    return data;
+    const { data } = await http.post(`/blogs/${postId}/reactions`, { reaction: 'INSIGHTFUL' });
+    return { liked: true, likeCount: data.INSIGHTFUL ?? 0 };
   },
   getLikeStatus: async (postId: string): Promise<{ liked: boolean; likeCount: number }> => {
-    const { data } = await http.get(`/posts/${postId}/like-status`);
-    return data;
+    const { data } = await http.get(`/blogs/${postId}/reactions`);
+    return { liked: false, likeCount: data.INSIGHTFUL ?? 0 };
   },
 };
 
@@ -222,6 +233,7 @@ export const uploadsApi = {
   uploadImage: async (file: File): Promise<string> => {
     const form = new FormData();
     form.append('file', file);
+    form.append('type', 'BLOG_COVER');
     const { data } = await http.post('/uploads/image', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -239,12 +251,12 @@ export interface ApiComment {
 }
 
 export const commentsApi = {
-  listForPost: async (postId: string): Promise<ApiComment[]> => {
-    const { data } = await http.get(`/comments/post/${postId}`);
+  listForPost: async (slug: string): Promise<ApiComment[]> => {
+    const { data } = await http.get(`/blogs/${slug}/comments`);
     return Array.isArray(data) ? data : (data.data ?? []);
   },
-  create: async (postId: string, content: string): Promise<ApiComment> => {
-    const { data } = await http.post('/comments', { postId, content });
+  create: async (slug: string, content: string): Promise<ApiComment> => {
+    const { data } = await http.post(`/blogs/${slug}/comments`, { content });
     return data;
   },
   update: async (id: string, content: string): Promise<ApiComment> => {
