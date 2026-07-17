@@ -156,7 +156,6 @@ export interface BlogCoverImage {
   url: string;
   publicId?: string | null;
   altText?: string | null;
-  caption?: string | null;
   crop?: BlogImageCrop | null;
 }
 

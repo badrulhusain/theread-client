@@ -1,4 +1,5 @@
 import { api, unwrapData, unwrapList } from '@/lib/api';
+import { toApiCoverImage } from '@/lib/blog-content';
 import { normalizeBlog, normalizeBlogStatus } from '@/lib/blog-status';
 import type { QueryParams } from '@/types/api';
 import type {
@@ -120,7 +121,7 @@ export const editorialService = {
   },
 
   async updateCoverImage(id: string, coverImage: BlogCoverImage | null) {
-    const { data } = await api.patch<Blog>(`/blogs/${id}/cover-image`, { coverImage });
+    const { data } = await api.patch<Blog>(`/blogs/${id}/cover-image`, { coverImage: toApiCoverImage(coverImage) });
     return normalizeBlog(unwrapData<Blog>(data));
   },
 
@@ -146,7 +147,9 @@ function toApiArticlePayload(payload: Partial<BlogFormPayload>) {
     ...(payload.title !== undefined ? { title: payload.title } : {}),
     ...(payload.excerpt !== undefined ? { excerpt: payload.excerpt } : {}),
     ...(payload.content !== undefined ? { content: payload.content } : {}),
-    ...(payload.categoryId !== undefined ? { categoryId: payload.categoryId } : {}),
+    ...(payload.categoryId !== undefined
+      ? { categoryId: payload.categoryId?.trim() || null }
+      : {}),
     ...(payload.tagIds !== undefined || payload.tags !== undefined ? { tagIds: payload.tagIds ?? payload.tags ?? [] } : {}),
     ...(payload.seoTitle !== undefined ? { seoTitle: payload.seoTitle } : {}),
     ...(payload.seoDescription !== undefined ? { seoDescription: payload.seoDescription } : {}),

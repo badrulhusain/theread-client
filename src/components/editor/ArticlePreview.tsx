@@ -16,10 +16,7 @@ export function ArticlePreview({ article }: { article: BlogFormPayload }) {
       </div>
       <div className={`mx-auto overflow-hidden rounded-2xl border border-[#ded3c4] bg-[#fffaf1] shadow-sm transition-all ${device === 'mobile' ? 'max-w-[390px]' : 'max-w-5xl'}`}>
         {thumbnail?.url ? (
-          <figure>
-            <div className="aspect-video overflow-hidden bg-[#eee6da]"><img src={thumbnail.url} alt={thumbnail.altText || ''} className="h-full w-full object-cover" style={{ objectPosition: `${thumbnail.crop?.x ?? 50}% ${thumbnail.crop?.y ?? 50}%`, transform: `scale(${thumbnail.crop?.zoom ?? 1})` }} /></div>
-            {thumbnail.caption ? <figcaption className="px-5 py-2 text-xs text-[#74685f]">{thumbnail.caption}</figcaption> : null}
-          </figure>
+          <div className="aspect-video overflow-hidden bg-[#eee6da]"><img src={thumbnail.url} alt={thumbnail.altText || ''} className="h-full w-full object-cover" style={{ objectPosition: `${thumbnail.crop?.x ?? 50}% ${thumbnail.crop?.y ?? 50}%`, transform: `scale(${thumbnail.crop?.zoom ?? 1})` }} /></div>
         ) : null}
         <div className={device === 'mobile' ? 'p-5' : 'p-8 md:p-12'}>
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[#a9793d]">{article.contentType?.replaceAll('_', ' ') || 'Article'}</p>

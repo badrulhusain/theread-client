@@ -1,5 +1,5 @@
 import DOMPurify from 'dompurify';
-import type { Blog } from '@/types/blog';
+import type { Blog, BlogCoverImage } from '@/types/blog';
 
 export function sanitizeHtml(value = '') {
   if (!value) return '';
@@ -58,4 +58,14 @@ export function coverImageUrl(blog: Pick<Blog, 'coverImage' | 'imageUrl'>) {
 export function coverImageAlt(blog: Pick<Blog, 'coverImage' | 'altText' | 'coverImageAltText' | 'title'>) {
   if (blog.coverImage && typeof blog.coverImage === 'object') return blog.coverImage.altText || blog.title;
   return blog.altText || blog.coverImageAltText || blog.title;
+}
+
+export function toApiCoverImage(coverImage: BlogCoverImage | null) {
+  if (!coverImage) return null;
+  return {
+    url: coverImage.url,
+    publicId: coverImage.publicId,
+    altText: coverImage.altText,
+    crop: coverImage.crop,
+  };
 }

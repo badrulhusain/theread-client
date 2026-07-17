@@ -1,4 +1,5 @@
 import { api, unwrapData, unwrapList } from '@/lib/api';
+import { toApiCoverImage } from '@/lib/blog-content';
 import { normalizeBlog } from '@/lib/blog-status';
 import { categoryService } from '@/services/category.service';
 import { tagService } from '@/services/tag.service';
@@ -57,7 +58,7 @@ export const blogService = {
     const { data } = await api.post<Blog>('/blogs', toApiBlogPayload(payload));
     const created = normalizeBlog(unwrapData<Blog>(data));
     if (payload.coverImage !== undefined) {
-      const { data: updated } = await api.patch<Blog>(`/blogs/${created.id}/cover-image`, { coverImage: payload.coverImage });
+      const { data: updated } = await api.patch<Blog>(`/blogs/${created.id}/cover-image`, { coverImage: toApiCoverImage(payload.coverImage ?? null) });
       return normalizeBlog(unwrapData<Blog>(updated));
     }
     return created;
@@ -71,7 +72,7 @@ export const blogService = {
     const { data } = await api.patch<Blog>(`/blogs/${id}`, toApiBlogPayload(payload));
     const updated = normalizeBlog(unwrapData<Blog>(data));
     if (payload.coverImage !== undefined) {
-      const { data: withCover } = await api.patch<Blog>(`/blogs/${id}/cover-image`, { coverImage: payload.coverImage });
+      const { data: withCover } = await api.patch<Blog>(`/blogs/${id}/cover-image`, { coverImage: toApiCoverImage(payload.coverImage ?? null) });
       return normalizeBlog(unwrapData<Blog>(withCover));
     }
     return updated;
@@ -106,7 +107,9 @@ function toApiBlogPayload(payload: Partial<BlogFormPayload>) {
     ...(payload.title !== undefined ? { title: payload.title } : {}),
     ...(payload.excerpt !== undefined ? { excerpt: payload.excerpt } : {}),
     ...(payload.content !== undefined ? { content: payload.content } : {}),
-    ...(payload.categoryId !== undefined ? { categoryId: payload.categoryId } : {}),
+    ...(payload.categoryId !== undefined
+      ? { categoryId: payload.categoryId?.trim() || null }
+      : {}),
     ...(payload.tagIds !== undefined || payload.tags !== undefined ? { tagIds: payload.tagIds ?? payload.tags ?? [] } : {}),
     ...(payload.seoTitle !== undefined ? { seoTitle: payload.seoTitle } : {}),
     ...(payload.seoDescription !== undefined ? { seoDescription: payload.seoDescription } : {}),
